@@ -91,6 +91,7 @@ void ManipulationExample::on_start(double time)
     geometry_msgs::PoseStamped end_frame;
     end_frame.pose = start_frame_pose;
     end_frame.pose.position.y += 0.3;
+    end_frame.pose.position.z += 0.3;
     
     trajectory_utils::Cartesian start;
     start.distal_frame = "LSoftHand";
