@@ -30,6 +30,8 @@
 #include <trajectory_utils/Cartesian.h>
 
 
+#include "fsm_definition.h"
+
 namespace XBotPlugin {
 
 /**
@@ -68,6 +70,7 @@ private:
     std::shared_ptr<ros::NodeHandle> _nh;
     ros::ServiceClient _client;
 
+    XBot::FSM::StateMachine< myfsm::MacroState , myfsm::SharedData > fsm;
 };
 
 }
