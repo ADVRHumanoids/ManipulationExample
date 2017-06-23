@@ -29,53 +29,58 @@
 #include <trajectory_utils/segment.h>
 #include <trajectory_utils/Cartesian.h>
 
+#include "FiniteStateMachine.h"
 
-namespace XBotPlugin {
-
+namespace XBotPlugin 
+{
 /**
  * @brief ManipulationExample XBot RT Plugin
  *
- **/
-class ManipulationExample : public XBot::XBotControlPlugin
-{
+**/
+    class ManipulationExample : public XBot::XBotControlPlugin
+    {
 
-public:
+    public:
 
-    virtual bool init_control_plugin(std::string path_to_config_file,
-                                     XBot::SharedMemory::Ptr shared_memory,
-                                     XBot::RobotInterface::Ptr robot);
+	virtual bool init_control_plugin(std::string path_to_config_file,
+					XBot::SharedMemory::Ptr shared_memory,
+					XBot::RobotInterface::Ptr robot);
 
-    virtual bool close();
+	virtual bool close();
 
-    virtual void on_start(double time);
+	virtual void on_start(double time);
 
-    virtual void on_stop(double time);
+	virtual void on_stop(double time);
 
-protected:
+    protected:
 
-    virtual void control_loop(double time, double period);
+	virtual void control_loop(double time, double period);
 
-private:
+    private:
 
-    XBot::RobotInterface::Ptr _robot;
-    
-    // loger
-    XBot::MatLogger::Ptr _logger;
+	// Robot
+	XBot::RobotInterface::Ptr _robot;
+	
+	// Loger
+	XBot::MatLogger::Ptr _logger;
 
-    // Homing
-    Eigen::VectorXd _q0, _q_home, _q, _k, _d, _k0, _d0, _qref;
-    double _time, _homing_time, _first_loop_time;
-    //ForceTorqueSensor::ConstPtr _l_arm_ft;
-    Eigen::Matrix<double, 6, 1> _l_arm_wrench;
-    double _l_hand_pos;
-    double _l_hand_ref;
-    bool _close_hand;
-    
-    // ROS
-    
-    
-    
-};
+	// Homing
+	Eigen::VectorXd _q0, _q_home, _q, _k, _d, _k0, _d0, _qref;
+	double _time, _homing_time, _first_loop_time;
+	//ForceTorqueSensor::ConstPtr _l_arm_ft;
+	Eigen::Matrix<double, 6, 1> _l_arm_wrench;
+	double _l_hand_pos;
+	double _l_hand_ref;
+	bool _close_hand;
+	
+	// ROS
+	std::shared_ptr<ros::NodeHandle> _nh;
+	ros::ServiceClient _client;
+	
+	// State Machine
+	XBot::FSM::StateMachine< myfsm::MacroState , myfsm::SharedData > fsm;
+	
+    };
 
 }
 
