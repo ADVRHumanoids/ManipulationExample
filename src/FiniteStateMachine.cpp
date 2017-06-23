@@ -9,7 +9,7 @@ void myfsm::Home::react (const XBot::FSM::Event& e)
 
 void myfsm::Home::entry (const XBot::FSM::Message& msg)
 {
-
+      
 }
 
 void myfsm::Home::run (double time, double period)
@@ -20,15 +20,25 @@ void myfsm::Home::run (double time, double period)
     //if(!shared_data().command.read(shared_data().current_command))
     //  std::cout << shared_data().current_command.str() << std::endl;
 
-    // Wait for RH_Pose, i.e. the Hose Grasp Pose (hose_grasp_pose)
-    shared_data()._hose_grasp_pose =
-    ros::topic::waitForMessage<geometry_msgs::PoseStamped>("hose_grasp_pose");
+//     // Wait for RH_Pose, i.e. the Hose Grasp Pose (hose_grasp_pose)
+//     shared_data()._hose_grasp_pose =
+//     ros::topic::waitForMessage<geometry_msgs::PoseStamped>("hose_grasp_pose");
+// 
+//     // Debug msg
+//     std::cout << "Got pose message: " << std::endl;
+//     std::cout << shared_data()._hose_grasp_pose->pose.position.x << std::endl;
 
-    // Debug msg
-    std::cout << "Got pose message: " << std::endl;
-    std::cout << shared_data()._hose_grasp_pose->pose.position.x << std::endl;
+        // blocking reading: wait for a command
+    if(shared_data().command.read(shared_data().current_command))
+    {
+	std::cout << "Command: " << shared_data().current_command.str() << std::endl;
 
-    transit("Move_RH");
+	// RH Move failed
+	if (!shared_data().current_command.str().compare("done"))
+	    transit("Idle");
+    }
+    
+    
 }
 
 void myfsm::Home::exit ()
@@ -37,6 +47,52 @@ void myfsm::Home::exit ()
 }
 //End Home State
 
+
+
+//Begin Idle State
+void myfsm::Idle::react (const XBot::FSM::Event& e)
+{
+    std::cout << "Home react" << std::endl;
+}
+
+void myfsm::Idle::entry (const XBot::FSM::Message& msg)
+{
+      
+}
+
+void myfsm::Idle::run (double time, double period)
+{
+    std::cout << "State: Idle run" << std::endl;
+
+//     // blocking reading: wait for a command
+//     //if(!shared_data().command.read(shared_data().current_command))
+//     //  std::cout << shared_data().current_command.str() << std::endl;
+// 
+    // Wait for RH_Pose, i.e. the Hose Grasp Pose (hose_grasp_pose)
+    shared_data()._hose_grasp_pose =
+    ros::topic::waitForMessage<geometry_msgs::PoseStamped>("hose_grasp_pose");
+
+    // Debug msg
+    std::cout << "Got pose message: " << std::endl;
+    std::cout << shared_data()._hose_grasp_pose->pose.position.x << std::endl;
+
+    // blocking reading: wait for a command
+    if(shared_data().command.read(shared_data().current_command))
+    {
+	std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+
+	// RH Move failed
+	if (!shared_data().current_command.str().compare("move"))
+	    transit("Move_RH");
+    }
+
+}
+
+void myfsm::Idle::exit ()
+{
+
+}
+//End Idle State
 
 
 
@@ -48,9 +104,9 @@ void myfsm::Move_RH::react (const XBot::FSM::Event& e)
 
 void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
 {
-    // Move RH to RH_Pose (1 mid point in the z-axis fixed dist)
+     // Move RH to RH_Pose (1 mid point in the z-axis fixed dist)
 
-    std::cout << "Move_RH run" << std::endl;
+    std::cout << "Move_RH entry" << std::endl;
 
     // sense and sync model
     shared_data()._robot->sense();
@@ -59,14 +115,16 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
     //ros::ServiceClient client =
     //  shared_data()._nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");
 
-    std::cout << "Move_RH run 2" << std::endl;
-
     // Get currnt hand 
     Eigen::Affine3d pose;
     geometry_msgs::Pose start_frame_pose;
+    
+    //std::string pose_frame_id = "/multisense/left_camera_optical_frame";
+    std::string pose_frame_id = "Waist";
 
-    shared_data()._robot->model().getPose("RSoftHand", "Waist", pose);
-    //shared_data()._robot->model().getPose("LSoftHand", pose);
+    //shared_data()._robot->model().getPose("RSoftHand", "Waist", pose);
+    shared_data()._robot->model().getPose("RSoftHand", pose_frame_id, pose);
+    shared_data()._robot->model().getPose("RSoftHand", pose);
     tf::poseEigenToMsg (pose, start_frame_pose);
 
     // define the start frame 
@@ -76,17 +134,21 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
     end_frame.pose = start_frame_pose;
-    //end_frame.pose.position.y += 0.3;
-    //end_frame.pose.position.z += 0.3;
+
+    // from message
     end_frame.pose.position.x = shared_data()._hose_grasp_pose->pose.position.x;
     end_frame.pose.position.y = shared_data()._hose_grasp_pose->pose.position.y;
-    end_frame.pose.position.z = shared_data()._hose_grasp_pose->pose.position.z;
+    end_frame.pose.position.z = shared_data()._hose_grasp_pose->pose.position.z-0.1;
 
-    //end_frame.pose.orientation.x = shared_data()._hose_grasp_pose->pose.orientation.x;
-    //end_frame.pose.orientation.y = shared_data()._hose_grasp_pose->pose.orientation.y;
-    //end_frame.pose.orientation.z = shared_data()._hose_grasp_pose->pose.orientation.z;
-    //end_frame.pose.orientation.w = shared_data()._hose_grasp_pose->pose.orientation.w;
+    end_frame.pose.orientation.x = shared_data()._hose_grasp_pose->pose.orientation.x;
+    end_frame.pose.orientation.y = shared_data()._hose_grasp_pose->pose.orientation.y;
+    end_frame.pose.orientation.z = shared_data()._hose_grasp_pose->pose.orientation.z;
+    end_frame.pose.orientation.w = shared_data()._hose_grasp_pose->pose.orientation.w;
 
+//     end_frame.pose.position.x = 0.5;
+//     end_frame.pose.position.y = -0.4;
+//     end_frame.pose.position.z = -0.1;
+    
     trajectory_utils::Cartesian start;
     start.distal_frame = "RSoftHand";
     start.frame = start_frame;
@@ -103,30 +165,69 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
     s1.start = start;        // start pose
     s1.end = end;            // end pose 
 
+//     start.frame = end_frame;
+// 
+//     end_frame.pose.position.x = shared_data()._hose_grasp_pose->pose.position.x;
+//     end_frame.pose.position.y = shared_data()._hose_grasp_pose->pose.position.y;
+//     end_frame.pose.position.z = shared_data()._hose_grasp_pose->pose.position.z;
+// 
+//     end_frame.pose.orientation.x = shared_data()._hose_grasp_pose->pose.orientation.x;
+//     end_frame.pose.orientation.y = shared_data()._hose_grasp_pose->pose.orientation.y;
+//     end_frame.pose.orientation.z = shared_data()._hose_grasp_pose->pose.orientation.z;
+//     end_frame.pose.orientation.w = shared_data()._hose_grasp_pose->pose.orientation.w;
+//     
+// 
+//     end.frame = end_frame;
+
+//     // define the first segment
+//     trajectory_utils::segment s2;
+//     s2.type.data = 0;        // min jerk traj
+//     s2.T.data = 5.0;         // traj duration 5 second      
+//     s2.start = start;        // start pose
+//     s2.end = end;            // end pose 
+
     // only one segment in this example
     std::vector<trajectory_utils::segment> segments;
     segments.push_back (s1);
+    //segments.push_back (s2);
 
     // prapere the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "Waist";
+    //srv.request.segment_trj.header.frame_id = "Waist";
+    srv.request.segment_trj.header.frame_id = "world";
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
 
-    std::cout <<"before" <<std::endl;
     // call the service
     shared_data()._client.call(srv);
-    std::cout <<"aftr" <<std::endl;
 
 }
 
 void myfsm::Move_RH::run (double time, double period)
 {
-  std::cout << "Move_RH run" << std::endl;
+    //std::cout << "Move_RH run" << std::endl;
   
-  //TBD: Check if the RH has reached the hose_grasp_pose
+    //TBD: Check if the RH has reached the hose_grasp_pose
   
-  //transit("Grasp_RH");
+    //transit("Grasp_RH");
+    
+    
+    
+  
+    // blocking reading: wait for a command
+    if(shared_data().command.read(shared_data().current_command))
+    {
+    std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+
+    // RH Move failed
+    if (!shared_data().current_command.str().compare("rh_move_fail"))
+	transit("Home");
+
+    // RH Move Succeeded
+    if (!shared_data().current_command.str().compare("success"))
+	transit("Grasp_RH");
+    }
+  
 }
 
 void myfsm::Move_RH::exit ()

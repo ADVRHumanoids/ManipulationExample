@@ -85,6 +85,23 @@ namespace myfsm{
       private:
         
      };
+     
+    class Idle : public MacroState
+    {
+      virtual std::string get_name() const { return "Idle"; }
+
+      virtual void run(double time, double period);
+
+      virtual void entry(const XBot::FSM::Message& msg);
+
+      virtual void react(const XBot::FSM::Event& e);
+
+      virtual void exit ();
+
+      private:
+        
+     };
+     
  
     class Move_RH : public MacroState
     {

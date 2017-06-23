@@ -103,6 +103,7 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     
     /*Registers states*/
     fsm.register_state(std::make_shared<myfsm::Home>());
+    fsm.register_state(std::make_shared<myfsm::Idle>());
     fsm.register_state(std::make_shared<myfsm::Move_RH>());
     fsm.register_state(std::make_shared<myfsm::Grasp_RH>());
     fsm.register_state(std::make_shared<myfsm::Grasp_RH_Done>());
@@ -187,7 +188,9 @@ void ManipulationExample::on_start(double time)
     _first_loop_time = time;
     _robot->sense();
     _robot->getJointPosition(_q0);
-    std::cout << name << " HOMING STARTED++--**!!!" << std::endl;
+    std::cout << name << " HOMING STARTED++--*--*!!!" << std::endl;
+    
+//     std::cout << name << "NO HOMING STARTED" << std::endl;
     
 }
 
@@ -208,7 +211,6 @@ void ManipulationExample::control_loop(double time, double period)
      * Since this function is called within the real-time loop, you should not perform
      * operations that are not rt-safe. */
     
-
     
     // Go to homing
     if( (time - _first_loop_time) <= _homing_time ){
