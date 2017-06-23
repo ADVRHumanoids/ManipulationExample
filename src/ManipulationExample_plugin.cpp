@@ -80,10 +80,21 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     _l_hand_pos = _l_hand_ref = 0.0;
     _close_hand = true;
 
+    
+    
     // ROS
+    int argc = 1;
+    const char *arg = "dummy_arg";
+    char* argg = const_cast<char*>(arg);
+    char** argv = &argg;    
+    ros::init(argc, argv, "ManipulationExample");
+    ros::NodeHandle* node_handle = new ros::NodeHandle;
+    _nh = std::shared_ptr<ros::NodeHandle>(node_handle);
+
+	
     
-    
-//     _robot->initLog("/tmp/homing_example_log", 100000);
+    // log
+    //_robot->initLog("/tmp/homing_example_log", 100000);
 
 
     return true;
@@ -154,10 +165,12 @@ void ManipulationExample::on_start(double time)
 //     ros::spinOnce();
     
     
-        _first_loop_time = time;
+    // for homing
+    _first_loop_time = time;
     _robot->sense();
     _robot->getJointPosition(_q0);
-    std::cout << name << " STARTED!!!" << std::endl;
+    std::cout << name << " HOMING STARTED++!!!" << std::endl;
+    
 }
 
 void ManipulationExample::on_stop(double time)
