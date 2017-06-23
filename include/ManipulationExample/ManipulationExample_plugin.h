@@ -57,17 +57,31 @@ protected:
 
 private:
 
-    XBot::RobotInterface::Ptr _robot;
+//     XBot::RobotInterface::Ptr _robot;
+// 
+//     double _start_time;
+// 
+//     Eigen::VectorXd _q0;
+// 
+     XBot::MatLogger::Ptr _logger;
+//     
+//     std::shared_ptr<ros::NodeHandle> _nh;
+//     ros::ServiceClient _client;
 
-    double _start_time;
-
-    Eigen::VectorXd _q0;
-
-    XBot::MatLogger::Ptr _logger;
     
-    std::shared_ptr<ros::NodeHandle> _nh;
-    ros::ServiceClient _client;
+    // Homing
+    XBot::RobotInterface::Ptr _robot;
+    Eigen::VectorXd _q0, _q_home, _q, _k, _d, _k0, _d0, _qref;
+    double _time, _homing_time, _first_loop_time;
 
+    //ForceTorqueSensor::ConstPtr _l_arm_ft;
+    Eigen::Matrix<double, 6, 1> _l_arm_wrench;
+
+    double _l_hand_pos;
+    double _l_hand_ref;
+    bool _close_hand;
+    
+    
 };
 
 }

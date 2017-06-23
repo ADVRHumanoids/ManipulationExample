@@ -34,26 +34,55 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
      * The RT plugin will be executed only if this init function returns true. */
 
 
-    /* Save robot to a private member. */
+//     /* Save robot to a private member. */
+//     _robot = robot;
+// 
+//     /* Initialize a logger which saves to the specified file. Remember that
+//      * the current date/time is always appended to the provided filename,
+//      * so that logs do not overwrite each other. */
+//     
+//     _logger = XBot::MatLogger::getLogger("/tmp/ManipulationExample_log");
+//     
+//     // ROS init
+//     int argc = 1;
+//     const char *arg = "dummy_arg";
+//     char* argg = const_cast<char*>(arg);
+//     char** argv = &argg;
+// 
+//     ros::init(argc, argv, "ManipulationExample");
+// 
+//     // nh and service segment_control client
+//     _nh = std::make_shared<ros::NodeHandle>();
+//     _client = _nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");
+
+
     _robot = robot;
 
-    /* Initialize a logger which saves to the specified file. Remember that
-     * the current date/time is always appended to the provided filename,
-     * so that logs do not overwrite each other. */
-    
-    _logger = XBot::MatLogger::getLogger("/tmp/ManipulationExample_log");
-    
-    // ROS init
-    int argc = 1;
-    const char *arg = "dummy_arg";
-    char* argg = const_cast<char*>(arg);
-    char** argv = &argg;
+    _robot->getRobotState("home", _q_home);
+    _robot->sense();
+    _robot->getJointPosition(_q0);
+    _robot->getStiffness(_k0);
+    _robot->getDamping(_d0);
+    _k = _k0;
+    _d = _d0;
+    _q = _q0;
+    _qref = _q0;
 
-    ros::init(argc, argv, "ManipulationExample");
+//     if( !_robot->checkJointLimits(_q_home) ) throw;
 
-    // nh and service segment_control client
-    _nh = std::make_shared<ros::NodeHandle>();
-    _client = _nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");
+//     _q_home *= -1;
+
+    std::cout << "_q_home from SRDF : " << _q_home << std::endl;
+    _time = 0;
+    _homing_time = 4;
+
+    _robot->print();
+
+    _l_hand_pos = _l_hand_ref = 0.0;
+    _close_hand = true;
+
+//     _robot->initLog("/tmp/homing_example_log", 100000);
+
 
     return true;
 
@@ -62,66 +91,71 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
 
 void ManipulationExample::on_start(double time)
 {
-    /* This function is called on plugin start, i.e. when the start command
-     * is sent over the plugin switch port (e.g. 'rosservice call /ManipulationExample_switch true').
-     * Since this function is called within the real-time loop, you should not perform
-     * operations that are not rt-safe. */
-
-    /* Save the plugin starting time to a class member */
-    _robot->getMotorPosition(_q0);
-
-    /* Save the robot starting config to a class member */
-    _start_time = time;
+//     /* This function is called on plugin start, i.e. when the start command
+//      * is sent over the plugin switch port (e.g. 'rosservice call /ManipulationExample_switch true').
+//      * Since this function is called within the real-time loop, you should not perform
+//      * operations that are not rt-safe. */
+// 
+//     /* Save the plugin starting time to a class member */
+//     _robot->getMotorPosition(_q0);
+// 
+//     /* Save the robot starting config to a class member */
+//     _start_time = time;
+//     
+//     // sense and sync model
+//     _robot->sense();
+//     
+//     // Get currnt Left hand pose
+//     Eigen::Affine3d pose;
+//     geometry_msgs::Pose start_frame_pose;
+//     _robot->model().getPose("LSoftHand", pose);
+//     
+//     // from eigen to ROS pose
+//     tf::poseEigenToMsg (pose, start_frame_pose);
+// 
+//     // define the PoseStamped start_frame amd end_frame
+//     geometry_msgs::PoseStamped start_frame;
+//     start_frame.pose = start_frame_pose;
+//     
+//     geometry_msgs::PoseStamped end_frame;
+//     end_frame.pose = start_frame_pose;
+//     end_frame.pose.position.y += 0.3;
+//     end_frame.pose.position.z += 0.3;
+//     
+//     trajectory_utils::Cartesian start;
+//     start.distal_frame = "LSoftHand";
+//     start.frame = start_frame;
+//     
+//     trajectory_utils::Cartesian end;
+//     end.distal_frame = "LSoftHand";
+//     end.frame = end_frame;
+//     
+//     // define the first segment
+//     trajectory_utils::segment s1;
+//     s1.type.data = 0;        // min jerk traj
+//     s1.T.data = 5.0;         // traj duration 5 second      
+//     s1.start = start;        // start pose
+//     s1.end = end;            // end pose 
+//     
+//     // only one segment in this example
+//     std::vector<trajectory_utils::segment> segments;
+//     segments.push_back(s1);
+//     
+//     // prapere the advr_segment_control
+//     ADVR_ROS::advr_segment_control srv;
+//     srv.request.segment_trj.header.frame_id = "world";
+//     srv.request.segment_trj.header.stamp = ros::Time::now();
+//     srv.request.segment_trj.segments = segments;
+//     
+//     // call the service
+//     _client.call(srv);
+//     ros::spinOnce();
     
-    // sense and sync model
+    
+        _first_loop_time = time;
     _robot->sense();
-    
-    // Get currnt Left hand pose
-    Eigen::Affine3d pose;
-    geometry_msgs::Pose start_frame_pose;
-    _robot->model().getPose("LSoftHand", pose);
-    
-    // from eigen to ROS pose
-    tf::poseEigenToMsg (pose, start_frame_pose);
-
-    // define the PoseStamped start_frame amd end_frame
-    geometry_msgs::PoseStamped start_frame;
-    start_frame.pose = start_frame_pose;
-    
-    geometry_msgs::PoseStamped end_frame;
-    end_frame.pose = start_frame_pose;
-    end_frame.pose.position.y += 0.3;
-    end_frame.pose.position.z += 0.3;
-    
-    trajectory_utils::Cartesian start;
-    start.distal_frame = "LSoftHand";
-    start.frame = start_frame;
-    
-    trajectory_utils::Cartesian end;
-    end.distal_frame = "LSoftHand";
-    end.frame = end_frame;
-    
-    // define the first segment
-    trajectory_utils::segment s1;
-    s1.type.data = 0;        // min jerk traj
-    s1.T.data = 5.0;         // traj duration 5 second      
-    s1.start = start;        // start pose
-    s1.end = end;            // end pose 
-    
-    // only one segment in this example
-    std::vector<trajectory_utils::segment> segments;
-    segments.push_back(s1);
-    
-    // prapere the advr_segment_control
-    ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "world";
-    srv.request.segment_trj.header.stamp = ros::Time::now();
-    srv.request.segment_trj.segments = segments;
-    
-    // call the service
-    _client.call(srv);
-    ros::spinOnce();
-    
+    _robot->getJointPosition(_q0);
+    std::cout << name << " STARTED!!!" << std::endl;
 }
 
 void ManipulationExample::on_stop(double time)
@@ -130,6 +164,7 @@ void ManipulationExample::on_stop(double time)
      * is sent over the plugin switch port (e.g. 'rosservice call /ManipulationExample_switch false').
      * Since this function is called within the real-time loop, you should not perform
      * operations that are not rt-safe. */
+    std::cout << name << " STOPPED!!!" << std::endl;
 }
 
 
@@ -139,6 +174,15 @@ void ManipulationExample::control_loop(double time, double period)
      * it is stopped.
      * Since this function is called within the real-time loop, you should not perform
      * operations that are not rt-safe. */
+    
+       // Go to homing
+    if( (time - _first_loop_time) <= _homing_time ){
+        _q = _q0 + 0.5*(1-std::cos(3.1415*(time - _first_loop_time)/_homing_time))*(_q_home-_q0);
+        _robot->setPositionReference(_q);
+        _robot->move();
+        return;
+
+    }
     
     return;
 
