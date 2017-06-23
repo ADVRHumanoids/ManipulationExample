@@ -35,48 +35,75 @@ namespace XBotPlugin
 	* The RT plugin will be executed only if this init function returns true. */
 
 
+
+	
+// 	// WITH FSM ///////////////////////////
+// 	
+// 	/* Save robot to a private member. */
+// 	_robot = robot;
+// 	fsm.shared_data().command = command;
+// 	fsm.shared_data().current_command = current_command;
+// 
+// 	/* Initialize a logger which saves to the specified file. Remember that
+// 	* the current date/time is always appended to the provided filename,
+// 	* so that logs do not overwrite each other.
+// 	*/
+// 	
+// 	_logger = XBot::MatLogger::getLogger("/tmp/ManipulationExample_log");
+// 
+// 	// ROS initialization
+// 	int argc = 1;
+// 	const char *arg = "dummy_arg";
+// 	char* argg = const_cast<char*>(arg);
+// 	char** argv = &argg;
+// 	
+// 	ros::init(argc, argv, "ManipulationExample");
+// 
+// 	ros::NodeHandle* node_handle = new ros::NodeHandle;
+// 	_nh = std::shared_ptr<ros::NodeHandle>(node_handle);
+// 	fsm.shared_data()._client = _nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");
+// 
+// 
+// 	/*Saves robot as shared variable between states*/
+// 	fsm.shared_data()._robot= robot;
+// 	
+// 	/*Registers states*/
+// 	fsm.register_state(std::make_shared<myfsm::Home>());
+// 	fsm.register_state(std::make_shared<myfsm::Move_RH>());
+// 	fsm.register_state(std::make_shared<myfsm::Grasp_RH>());
+// 	fsm.register_state(std::make_shared<myfsm::Grasp_RH_Done>());
+// 	
+// 	// Initialize the FSM with the initial state
+// 	fsm.init("Home");
+// 	// WITH FSM ///////////////////////////
+	
+	
 	/* Save robot to a private member. */
 	_robot = robot;
-	fsm.shared_data().command = command;
-	fsm.shared_data().current_command = current_command;
 
-	/* Initialize a logger which saves to the specified file. Remember that
-	* the current date/time is always appended to the provided filename,
-	* so that logs do not overwrite each other.
-	*/
-	
-	_logger = XBot::MatLogger::getLogger("/tmp/ManipulationExample_log");
+	_robot->getRobotState("home", _q_home);
+	_robot->sense();
+	_robot->getMotorPosition(_q0);
+	_q = _q0;
+	_qref = _q0;
+	_q_msr = _q0;
 
-	// ROS initialization
-	int argc = 1;
-	const char *arg = "dummy_arg";
-	char* argg = const_cast<char*>(arg);
-	char** argv = &argg;
-	
-	ros::init(argc, argv, "ManipulationExample");
-
-	ros::NodeHandle* node_handle = new ros::NodeHandle;
-	_nh = std::shared_ptr<ros::NodeHandle>(node_handle);
-	fsm.shared_data()._client = _nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");
+	_time = 0;
+	_homing_time = 5.0;
 
 
-	/*Saves robot as shared variable between states*/
-	fsm.shared_data()._robot= robot;
-	
-	/*Registers states*/
-	fsm.register_state(std::make_shared<myfsm::Home>());
-	fsm.register_state(std::make_shared<myfsm::Move_RH>());
-	fsm.register_state(std::make_shared<myfsm::Grasp_RH>());
-	fsm.register_state(std::make_shared<myfsm::Grasp_RH_Done>());
-	
-	// Initialize the FSM with the initial state
-	fsm.init("Home");
 
+
+	qall.resize(_robot->getJointNum());
+
+	_robot->getJointPosition(_q_name);
+	ft_map = _robot->getForceTorque();
+	imu_map = _robot->getImu();
+
+	FTSensor.resize(12);
 
 	return true;
 	
-
-
     }
 
     void ManipulationExample::on_start(double time)
@@ -87,10 +114,18 @@ namespace XBotPlugin
 	* operations that are not rt-safe. */
 
 	/* Save the plugin starting time to a class member */
-	_robot->getMotorPosition(_q0);
+	//_robot->getMotorPosition(_q0);
 
 	/* Save the robot starting config to a class member */
-	_start_time = time;
+	//_start_time = time;
+	
+	////////////////////////////////// homing
+	_first_loop_time = time;
+	_robot->sense();
+	_robot->getJointPosition(_q0);
+	std::cout << name << " STARTED!!!" << std::endl;
+	//////////////////////////////////
+	
 	
     }
 
@@ -110,7 +145,33 @@ namespace XBotPlugin
 	* Since this function is called within the real-time loop, you should not perform
 	* operations that are not rt-safe. */
 	
-	fsm.run(time, 0.01);
+	
+	// from chengxu_walking
+	// Go to homing
+	if ( (time - _first_loop_time) <= _homing_time ) {
+		std::cout << "IN HOMING ..." << std::endl;
+		_q = _q0 + 0.5 * (1 - std::cos(M_PI * (time - _first_loop_time) / _homing_time)) * (_q_home - _q0);
+		std::cout << "Done with _q" << std::endl;
+		if ( (time - _first_loop_time) == _homing_time ) {
+			DPRINTF("Homing finished.\n");
+		}
+	}
+	else {
+		//RTControl.Run();
+		//RTControl.JointRefToXBot(_q);
+	    std::cout << "Waiting for control loop" << std::endl;  // maybe call fsm here?
+	}
+
+	std::cout << "Start setting position" << std::endl;
+	_robot->setPositionReference(_q);
+	std::cout << "Start moving" << std::endl;
+	_robot->move();
+	
+	
+	
+	
+	// Run fsm
+	//fsm.run(time, 0.01);
     
 	// Spin ROS
 	ros::spinOnce();

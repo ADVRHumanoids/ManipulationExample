@@ -29,7 +29,7 @@
 #include <trajectory_utils/segment.h>
 #include <trajectory_utils/Cartesian.h>
 
-
+//#include "RTControl/XBotRTControlClass.h"
 #include "fsm_definition.h"
 
 namespace XBotPlugin {
@@ -70,7 +70,26 @@ private:
     std::shared_ptr<ros::NodeHandle> _nh;
     ros::ServiceClient _client;
 
+    // State Machine
     XBot::FSM::StateMachine< myfsm::MacroState , myfsm::SharedData > fsm;
+    
+    // ------ homing ---------------------------
+    double _time, _homing_time, _first_loop_time;
+    Eigen::VectorXd _q_home, _qref;
+    XBot::JointNameMap _q_name;
+    
+    //
+    //XBotRTControlClass RTControl;
+    
+    //
+    Eigen::VectorXd _q, _q_msr;
+    
+    //
+    std::vector<double> FTSensor, HandFTSensor, qall;
+    
+    std::map< std::string, XBot::ForceTorqueSensor::ConstPtr > ft_map;
+    std::map< std::string, XBot::ImuSensor::ConstPtr >  imu_map;
+    
 };
 
 }
