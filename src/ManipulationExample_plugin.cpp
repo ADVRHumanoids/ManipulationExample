@@ -56,8 +56,11 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
 //     _client = _nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");
 
 
+    /* Save robot to a private member. */
     _robot = robot;
 
+    
+    // HOMING 
     _robot->getRobotState("home", _q_home);
     _robot->sense();
     _robot->getJointPosition(_q0);
@@ -68,10 +71,6 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     _q = _q0;
     _qref = _q0;
 
-//     if( !_robot->checkJointLimits(_q_home) ) throw;
-
-//     _q_home *= -1;
-
     std::cout << "_q_home from SRDF : " << _q_home << std::endl;
     _time = 0;
     _homing_time = 4;
@@ -81,6 +80,9 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     _l_hand_pos = _l_hand_ref = 0.0;
     _close_hand = true;
 
+    // ROS
+    
+    
 //     _robot->initLog("/tmp/homing_example_log", 100000);
 
 
@@ -175,7 +177,7 @@ void ManipulationExample::control_loop(double time, double period)
      * Since this function is called within the real-time loop, you should not perform
      * operations that are not rt-safe. */
     
-       // Go to homing
+    // Go to homing
     if( (time - _first_loop_time) <= _homing_time ){
         _q = _q0 + 0.5*(1-std::cos(3.1415*(time - _first_loop_time)/_homing_time))*(_q_home-_q0);
         _robot->setPositionReference(_q);
