@@ -91,7 +91,25 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     ros::NodeHandle* node_handle = new ros::NodeHandle;
     _nh = std::shared_ptr<ros::NodeHandle>(node_handle);
 
+    
 	
+    // FSM
+    fsm.shared_data().command = command;
+    fsm.shared_data().current_command = current_command;
+    fsm.shared_data()._client = _nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");
+    
+    /*Saves robot as shared variable between states*/
+    fsm.shared_data()._robot= robot;
+    
+    /*Registers states*/
+    fsm.register_state(std::make_shared<myfsm::Home>());
+    fsm.register_state(std::make_shared<myfsm::Move_RH>());
+    fsm.register_state(std::make_shared<myfsm::Grasp_RH>());
+    fsm.register_state(std::make_shared<myfsm::Grasp_RH_Done>());
+    
+    // Initialize the FSM with the initial state
+    fsm.init("Home");
+    
     
     // log
     //_robot->initLog("/tmp/homing_example_log", 100000);
@@ -169,7 +187,7 @@ void ManipulationExample::on_start(double time)
     _first_loop_time = time;
     _robot->sense();
     _robot->getJointPosition(_q0);
-    std::cout << name << " HOMING STARTED++!!!" << std::endl;
+    std::cout << name << " HOMING STARTED++--**!!!" << std::endl;
     
 }
 
@@ -190,6 +208,8 @@ void ManipulationExample::control_loop(double time, double period)
      * Since this function is called within the real-time loop, you should not perform
      * operations that are not rt-safe. */
     
+
+    
     // Go to homing
     if( (time - _first_loop_time) <= _homing_time ){
         _q = _q0 + 0.5*(1-std::cos(3.1415*(time - _first_loop_time)/_homing_time))*(_q_home-_q0);
@@ -198,6 +218,9 @@ void ManipulationExample::control_loop(double time, double period)
         return;
 
     }
+    
+    // Run fsm
+    fsm.run(time, 0.01);
     
     return;
 

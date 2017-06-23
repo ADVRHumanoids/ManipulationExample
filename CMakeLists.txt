@@ -55,7 +55,7 @@ include_directories(include/${PROJECT_NAME}
 
 # lib
 add_library(${PROJECT_NAME} SHARED
-    src/ManipulationExample_plugin.cpp
+    src/ManipulationExample_plugin.cpp src/FiniteStateMachine.cpp
 )
 
 # set Xenomain flags if Xenomai is found
