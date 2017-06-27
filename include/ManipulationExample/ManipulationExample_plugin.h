@@ -41,6 +41,8 @@ class ManipulationExample : public XBot::XBotControlPlugin
 {
 
 public:
+  
+    void on_manipulation_status(const std_msgs::Bool::ConstPtr& msg);
 
     virtual bool init_control_plugin(std::string path_to_config_file,
                                      XBot::SharedMemory::Ptr shared_memory,
@@ -50,9 +52,8 @@ public:
 
     virtual void on_start(double time);
 
-    virtual void on_stop(double time);
+    virtual void on_stop(double time);   
     
-    void on_manipulation_status(const std_msgs::Bool::ConstPtr& msg);
 
 protected:
 

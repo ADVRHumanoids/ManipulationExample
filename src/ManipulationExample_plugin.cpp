@@ -54,6 +54,7 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     // nh and service segment_control client
     _nh = std::make_shared<ros::NodeHandle>();
     _client = _nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");
+    _feedBack = _nh->subscribe("Manipulation_status",1,&ManipulationExample::on_manipulation_status,this);
 
     return true;
 
@@ -120,17 +121,8 @@ void ManipulationExample::on_start(double time)
     
     // call the service
     _client.call(srv);
+     std::cout<<"MANIPULATION SERV CALLED"<<std::endl;
     
-    if (manipulation_status == true){
-      
-      std::cout<<"MANIPULATION STATUS DONE"<<std::endl;
-      
-    }else{
-      
-      std::cout<<"MANIPULATION STATUS RUNNING"<<std::endl;
-    }
-    
-    ros::spinOnce();
     
 }
 
@@ -149,6 +141,17 @@ void ManipulationExample::control_loop(double time, double period)
      * it is stopped.
      * Since this function is called within the real-time loop, you should not perform
      * operations that are not rt-safe. */
+    
+    if (manipulation_status == true){
+      
+      std::cout<<"MANIPULATION STATUS DONE"<<std::endl;
+      
+    }else{
+      
+      //std::cout<<"MANIPULATION STATUS RUNNING"<<std::endl;
+    }
+    
+    ros::spinOnce();
     
     return;
 
