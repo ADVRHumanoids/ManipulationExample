@@ -28,6 +28,7 @@
 
 #include <trajectory_utils/segment.h>
 #include <trajectory_utils/Cartesian.h>
+#include <std_msgs/Bool.h>
 
 
 namespace XBotPlugin {
@@ -50,6 +51,8 @@ public:
     virtual void on_start(double time);
 
     virtual void on_stop(double time);
+    
+    void on_manipulation_status(const std_msgs::Bool::ConstPtr& msg);
 
 protected:
 
@@ -67,6 +70,8 @@ private:
     
     std::shared_ptr<ros::NodeHandle> _nh;
     ros::ServiceClient _client;
+    ros::Subscriber _feedBack;
+    bool manipulation_status;
 
 };
 

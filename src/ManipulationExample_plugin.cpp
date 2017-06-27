@@ -120,6 +120,16 @@ void ManipulationExample::on_start(double time)
     
     // call the service
     _client.call(srv);
+    
+    if (manipulation_status == true){
+      
+      std::cout<<"MANIPULATION STATUS DONE"<<std::endl;
+      
+    }else{
+      
+      std::cout<<"MANIPULATION STATUS RUNNING"<<std::endl;
+    }
+    
     ros::spinOnce();
     
 }
@@ -155,6 +165,11 @@ bool ManipulationExample::close()
     return true;
 }
 
+void ManipulationExample::on_manipulation_status(const std_msgs::Bool::ConstPtr& msg)
+{
+  
+  manipulation_status = msg->data;
 
+}
 
 }
