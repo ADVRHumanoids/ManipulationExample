@@ -122,25 +122,24 @@ void ManipulationExample::on_start(double time)
     
     // call the service
     _client.call(srv);
-     std::cout<<"MANIPULATION SERV CALLED"<<std::endl;
      
     //r hand moving
     int r_hand_id =_robot->getHand()["r_handj"]->getHandId();
     XBot::Hand::Ptr r_hand =_robot->getHand(r_hand_id);
-    r_hand->grasp(1);
+    r_hand->grasp(0);
     
     //l hand moving
     int l_hand_id =_robot->getHand()["l_handj"]->getHandId();
     XBot::Hand::Ptr l_hand =_robot->getHand(l_hand_id);
-    l_hand->grasp(0);
+    l_hand->grasp(1);
    
     _robot->move();
     
     _robot->sense();
     double r_state = r_hand->getGraspState();
     double l_state = l_hand->getGraspState();
-    std::cout<<"RSTATE "<<r_state<<std::endl;
-    std::cout<<"LSTATE "<<l_state<<std::endl;
+    std::cout<<"R hand STATE "<<r_state<<std::endl;
+    std::cout<<"L hand STATE "<<l_state<<std::endl;
 
      
     
@@ -162,13 +161,13 @@ void ManipulationExample::control_loop(double time, double period)
      * Since this function is called within the real-time loop, you should not perform
      * operations that are not rt-safe. */
      
-    if (manipulation_status == true){
+    if (manipulation_status == false){
+        
+//         std::cout<<"MANIPULATION DONE"<<std::endl;
+    } 
+    else{
       
-      std::cout<<"MANIPULATION STATUS DONE"<<std::endl;
-      
-    }else{
-      
-      //std::cout<<"MANIPULATION STATUS RUNNING"<<std::endl;
+//         std::cout<<"MANIPULATION STATUS RUNNING"<<std::endl;
     }
     
     ros::spinOnce();
