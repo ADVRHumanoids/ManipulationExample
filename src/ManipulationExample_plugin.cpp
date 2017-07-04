@@ -55,6 +55,7 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     _nh = std::make_shared<ros::NodeHandle>();
     _client = _nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");
     _feedBack = _nh->subscribe("Manipulation_status",1,&ManipulationExample::on_manipulation_status,this);
+    manipulation_status = false;
 
     return true;
 
@@ -123,14 +124,25 @@ void ManipulationExample::on_start(double time)
     _client.call(srv);
      std::cout<<"MANIPULATION SERV CALLED"<<std::endl;
      
-     //29
-     XBot::Hand::Ptr hand =_robot->getHand(19);
-     std::cout<<"Moving hand: "<< hand->getHandName()<<std::endl;
-    _robot->setPositionReference(_q0);
+    //r hand moving
+    int r_hand_id =_robot->getHand()["r_handj"]->getHandId();
+    XBot::Hand::Ptr r_hand =_robot->getHand(r_hand_id);
+    r_hand->grasp(1);
     
-     hand->grasp(1.0);
+    //l hand moving
+    int l_hand_id =_robot->getHand()["l_handj"]->getHandId();
+    XBot::Hand::Ptr l_hand =_robot->getHand(l_hand_id);
+    l_hand->grasp(0);
    
     _robot->move();
+    
+    _robot->sense();
+    double r_state = r_hand->getGraspState();
+    double l_state = l_hand->getGraspState();
+    std::cout<<"RSTATE "<<r_state<<std::endl;
+    std::cout<<"LSTATE "<<l_state<<std::endl;
+
+     
     
 }
 
@@ -149,10 +161,10 @@ void ManipulationExample::control_loop(double time, double period)
      * it is stopped.
      * Since this function is called within the real-time loop, you should not perform
      * operations that are not rt-safe. */
-    
+     
     if (manipulation_status == true){
       
-      //std::cout<<"MANIPULATION STATUS DONE"<<std::endl;
+      std::cout<<"MANIPULATION STATUS DONE"<<std::endl;
       
     }else{
       
