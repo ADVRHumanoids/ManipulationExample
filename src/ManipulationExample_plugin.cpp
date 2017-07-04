@@ -122,7 +122,15 @@ void ManipulationExample::on_start(double time)
     // call the service
     _client.call(srv);
      std::cout<<"MANIPULATION SERV CALLED"<<std::endl;
+     
+     //29
+     XBot::Hand::Ptr hand =_robot->getHand(19);
+     std::cout<<"Moving hand: "<< hand->getHandName()<<std::endl;
+    _robot->setPositionReference(_q0);
     
+     hand->grasp(1.0);
+   
+    _robot->move();
     
 }
 
@@ -144,7 +152,7 @@ void ManipulationExample::control_loop(double time, double period)
     
     if (manipulation_status == true){
       
-      std::cout<<"MANIPULATION STATUS DONE"<<std::endl;
+      //std::cout<<"MANIPULATION STATUS DONE"<<std::endl;
       
     }else{
       
