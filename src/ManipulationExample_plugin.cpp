@@ -81,7 +81,7 @@ void ManipulationExample::on_start(double time)
     // Get currnt Left hand pose
     Eigen::Affine3d pose;
     geometry_msgs::Pose start_frame_pose;
-    _robot->model().getPose("LSoftHand", pose);
+    _robot->model().getPose("LSoftHand", "Waist", pose);
     
     // from eigen to ROS pose
     tf::poseEigenToMsg (pose, start_frame_pose);
@@ -92,8 +92,8 @@ void ManipulationExample::on_start(double time)
     
     geometry_msgs::PoseStamped end_frame;
     end_frame.pose = start_frame_pose;
-    end_frame.pose.position.y += 0.3;
-    end_frame.pose.position.z += 0.3;
+    end_frame.pose.position.x += 0.2;
+//     end_frame.pose.position.z += 0.3;
     
     trajectory_utils::Cartesian start;
     start.distal_frame = "LSoftHand";
@@ -116,30 +116,30 @@ void ManipulationExample::on_start(double time)
     
     // prapere the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "world";
+    srv.request.segment_trj.header.frame_id = "Waist";
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
     
     // call the service
     _client.call(srv);
      
-    //r hand moving
-    int r_hand_id =_robot->getHand()["r_handj"]->getHandId();
-    XBot::Hand::Ptr r_hand =_robot->getHand(r_hand_id);
-    r_hand->grasp(0);
-    
-    //l hand moving
-    int l_hand_id =_robot->getHand()["l_handj"]->getHandId();
-    XBot::Hand::Ptr l_hand =_robot->getHand(l_hand_id);
-    l_hand->grasp(1);
-   
-    _robot->move();
-    
-    _robot->sense();
-    double r_state = r_hand->getGraspState();
-    double l_state = l_hand->getGraspState();
-    std::cout<<"R hand STATE "<<r_state<<std::endl;
-    std::cout<<"L hand STATE "<<l_state<<std::endl;
+//     //r hand moving
+//     int r_hand_id =_robot->getHand()["r_handj"]->getHandId();
+//     XBot::Hand::Ptr r_hand =_robot->getHand(r_hand_id);
+//     r_hand->grasp(0);
+//     
+//     //l hand moving
+//     int l_hand_id =_robot->getHand()["l_handj"]->getHandId();
+//     XBot::Hand::Ptr l_hand =_robot->getHand(l_hand_id);
+//     l_hand->grasp(1);
+//    
+//     _robot->move();
+//     
+//     _robot->sense();
+//     double r_state = r_hand->getGraspState();
+//     double l_state = l_hand->getGraspState();
+//     std::cout<<"R hand STATE "<<r_state<<std::endl;
+//     std::cout<<"L hand STATE "<<l_state<<std::endl;
 
      
     
