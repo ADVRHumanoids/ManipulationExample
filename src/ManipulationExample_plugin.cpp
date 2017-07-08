@@ -51,12 +51,6 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
 
     ros::init(argc, argv, "ManipulationExample");
 
-    // nh and service segment_control client
-    _nh = std::make_shared<ros::NodeHandle>();
-    _client = _nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");
-    _feedBack = _nh->subscribe("Manipulation_status",1,&ManipulationExample::on_manipulation_status,this);
-    manipulation_status = false;
-
     return true;
 
 
@@ -68,6 +62,13 @@ void ManipulationExample::on_start(double time)
      * is sent over the plugin switch port (e.g. 'rosservice call /ManipulationExample_switch true').
      * Since this function is called within the real-time loop, you should not perform
      * operations that are not rt-safe. */
+    
+    // nh and service segment_control client
+    _nh = std::make_shared<ros::NodeHandle>();
+    _client = _nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");
+    _feedBack = _nh->subscribe("Manipulation_status",1,&ManipulationExample::on_manipulation_status,this);
+    manipulation_status = false;
+
 
     /* Save the plugin starting time to a class member */
     _robot->getMotorPosition(_q0);
@@ -81,7 +82,7 @@ void ManipulationExample::on_start(double time)
     // Get currnt Left hand pose
     Eigen::Affine3d pose;
     geometry_msgs::Pose start_frame_pose;
-    _robot->model().getPose("LSoftHand", "Waist", pose);
+    _robot->model().getPose("RSoftHand", "Waist", pose);
     
     // from eigen to ROS pose
     tf::poseEigenToMsg (pose, start_frame_pose);
@@ -92,15 +93,15 @@ void ManipulationExample::on_start(double time)
     
     geometry_msgs::PoseStamped end_frame;
     end_frame.pose = start_frame_pose;
-    end_frame.pose.position.x += 0.2;
-//     end_frame.pose.position.z += 0.3;
+    end_frame.pose.position.x += 0.3;
+    end_frame.pose.position.z += 0.3;
     
     trajectory_utils::Cartesian start;
-    start.distal_frame = "LSoftHand";
+    start.distal_frame = "RSoftHand";
     start.frame = start_frame;
     
     trajectory_utils::Cartesian end;
-    end.distal_frame = "LSoftHand";
+    end.distal_frame = "RSoftHand";
     end.frame = end_frame;
     
     // define the first segment
