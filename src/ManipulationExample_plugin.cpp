@@ -82,7 +82,7 @@ void ManipulationExample::on_start(double time)
     // Get currnt Left hand pose
     Eigen::Affine3d pose;
     geometry_msgs::Pose start_frame_pose;
-    _robot->model().getPose("RSoftHand", "Waist", pose);
+    _robot->model().getPose("arm2_7", pose);
     
     // from eigen to ROS pose
     tf::poseEigenToMsg (pose, start_frame_pose);
@@ -93,15 +93,16 @@ void ManipulationExample::on_start(double time)
     
     geometry_msgs::PoseStamped end_frame;
     end_frame.pose = start_frame_pose;
-    end_frame.pose.position.x += 0.3;
-    end_frame.pose.position.z += 0.3;
+    end_frame.pose.position.x += 0.15;
+    end_frame.pose.position.y += 0.1;
+    end_frame.pose.position.z += 0.15;
     
     trajectory_utils::Cartesian start;
-    start.distal_frame = "RSoftHand";
+    start.distal_frame = "arm2_7";
     start.frame = start_frame;
     
     trajectory_utils::Cartesian end;
-    end.distal_frame = "RSoftHand";
+    end.distal_frame = "arm2_7";
     end.frame = end_frame;
     
     // define the first segment
@@ -117,7 +118,7 @@ void ManipulationExample::on_start(double time)
     
     // prapere the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "Waist";
+    srv.request.segment_trj.header.frame_id = "world";
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
     
@@ -129,12 +130,20 @@ void ManipulationExample::on_start(double time)
 //     XBot::Hand::Ptr r_hand =_robot->getHand(r_hand_id);
 //     r_hand->grasp(0);
 //     
-//     //l hand moving
-//     int l_hand_id =_robot->getHand()["l_handj"]->getHandId();
-//     XBot::Hand::Ptr l_hand =_robot->getHand(l_hand_id);
-//     l_hand->grasp(1);
-//    
-//     _robot->move();
+    //l hand moving
+//     int l_hand_id = _robot->getHand()["j_arm1_8"]->getHandId();
+//     DPRINTF("j_arm1_8 id: %d \n", l_hand_id);
+    int l_hand_id = 53;
+    XBot::Hand::Ptr l_hand =_robot->getHand(l_hand_id);
+    if(l_hand != nullptr) {
+        l_hand->grasp(1);
+    }
+    else {
+        DPRINTF("Hand called j_arm1_8, does not exsist in current URDF/SRDF config\n");
+    }
+    
+   
+    _robot->move();
 //     
 //     _robot->sense();
 //     double r_state = r_hand->getGraspState();
@@ -171,7 +180,7 @@ void ManipulationExample::control_loop(double time, double period)
 //         std::cout<<"MANIPULATION STATUS RUNNING"<<std::endl;
     }
     
-    ros::spinOnce();
+//     ros::spinOnce();
     
     return;
 
