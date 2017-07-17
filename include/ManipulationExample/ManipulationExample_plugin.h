@@ -69,10 +69,10 @@ private:
 
     XBot::MatLogger::Ptr _logger;
     
-    std::shared_ptr<ros::NodeHandle> _nh;
-    ros::ServiceClient _client;
-    ros::Subscriber _feedBack;
-    bool manipulation_status;
+//     std::shared_ptr<ros::NodeHandle> _nh;
+//     ros::ServiceClient _client;
+//     ros::Subscriber _feedBack;
+//     bool manipulation_status;
     
     XBot::Hand::Ptr _LHand;
     XBot::Hand::Ptr _RHand;
