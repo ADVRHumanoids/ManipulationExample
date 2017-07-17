@@ -73,6 +73,9 @@ private:
     ros::ServiceClient _client;
     ros::Subscriber _feedBack;
     bool manipulation_status;
+    
+    XBot::Hand::Ptr _LHand;
+    XBot::Hand::Ptr _RHand;
 
 };
 

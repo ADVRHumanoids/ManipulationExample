@@ -123,26 +123,20 @@ void ManipulationExample::on_start(double time)
     // call the service
     _client.call(srv);
      
-    //r hand moving
-    int r_hand_id =_robot->getHand()["r_handj"]->getHandId();
-    XBot::Hand::Ptr r_hand =_robot->getHand(r_hand_id);
-    r_hand->grasp(0);
+    std::map<std::string, XBot::Hand::Ptr> hands = _robot->getHand();
     
-    //l hand moving
-    int l_hand_id =_robot->getHand()["l_handj"]->getHandId();
-    XBot::Hand::Ptr l_hand =_robot->getHand(l_hand_id);
-    l_hand->grasp(1);
-   
-    _robot->move();
-    
-    _robot->sense();
-    double r_state = r_hand->getGraspState();
-    double l_state = l_hand->getGraspState();
-    std::cout<<"R hand STATE "<<r_state<<std::endl;
-    std::cout<<"L hand STATE "<<l_state<<std::endl;
+    // RHand
+    auto r_hand_it = hands.find("r_handj");
+    if(r_hand_it != hands.end()) {
+        _RHand = r_hand_it->second;
+    }
+    // LHand
+    auto l_hand_it = hands.find("l_handj");
+    if(l_hand_it != hands.end()) {
+        _LHand = l_hand_it->second;
+    }
 
      
-    
 }
 
 void ManipulationExample::on_stop(double time)
@@ -160,6 +154,20 @@ void ManipulationExample::control_loop(double time, double period)
      * it is stopped.
      * Since this function is called within the real-time loop, you should not perform
      * operations that are not rt-safe. */
+    
+    if(command.read(current_command) == "open RHand") {
+        _RHand->grasp(0.0);
+    }
+    else if(command.read(current_command) == "open LHand") {
+        _LHand->grasp(0.0);
+    }
+    else if(command.read(current_command) == "close RHand") {
+        _RHand->grasp(1.0);
+    }
+    else if(command.read(current_command) == "close LHand") {
+        _LHand->grasp(1.0);
+    }
+    
      
     if (manipulation_status == false){
         
