@@ -97,7 +97,7 @@ void ManipulationExample::on_start(double time)
     end_frame.pose.position.z += 0.3;
     
     trajectory_utils::Cartesian start;
-    start.distal_frame = "LSoftHand";
+    start.distal_frame = "RSoftHand";
     start.frame = start_frame;
     
     trajectory_utils::Cartesian end;
