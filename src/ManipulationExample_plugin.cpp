@@ -124,8 +124,19 @@ void ManipulationExample::on_start(double time)
     // call the service
     _client.call(srv);
      
-
-     
+    
+    // hands
+    std::map<std::string, XBot::Hand::Ptr> hands = _robot->getHand();
+    // RHand
+    auto r_hand_it = hands.find("r_handj");
+    if(r_hand_it != hands.end()) {
+        _RHand = r_hand_it->second;
+    }
+    // LHand
+    auto l_hand_it = hands.find("l_handj");
+    if(l_hand_it != hands.end()) {
+        _LHand = l_hand_it->second;
+    }
     
 }
 
@@ -147,19 +158,19 @@ void ManipulationExample::control_loop(double time, double period)
     
     command.read(current_command);
     
-    if(current_command.str() == "open RHand") {
+    if(current_command.str() == "open RHand" && (_RHand != nullptr)) {
         DPRINTF("Opening RHand\n");
         _RHand->grasp(0.0);
     }
-    else if(current_command.str() == "open LHand") {
+    else if(current_command.str() == "open LHand" && (_LHand != nullptr)) {
         DPRINTF("Opening LHand\n");
         _LHand->grasp(0.0);
     }
-    else if(current_command.str() == "close RHand") {
+    else if(current_command.str() == "close RHand" && (_RHand != nullptr)) {
         DPRINTF("Closing RHand\n");
         _RHand->grasp(1.0);
     }
-    else if(current_command.str() == "close LHand") {
+    else if(current_command.str() == "close LHand" && (_LHand != nullptr)) {
         DPRINTF("Closing LHand\n");
         _LHand->grasp(1.0);
     }
