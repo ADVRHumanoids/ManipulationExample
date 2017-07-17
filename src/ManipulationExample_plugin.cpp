@@ -82,7 +82,7 @@ void ManipulationExample::on_start(double time)
     // Get currnt Left hand pose
     Eigen::Affine3d pose;
     geometry_msgs::Pose start_frame_pose;
-    _robot->model().getPose("RSoftHand", "Waist", pose);
+    _robot->model().getPose("RSoftHand", pose);
     
     // from eigen to ROS pose
     tf::poseEigenToMsg (pose, start_frame_pose);
@@ -145,16 +145,22 @@ void ManipulationExample::control_loop(double time, double period)
      * Since this function is called within the real-time loop, you should not perform
      * operations that are not rt-safe. */
     
-    if(command.read(current_command) == "open RHand") {
+    command.read(current_command);
+    
+    if(current_command.str() == "open RHand") {
+        DPRINTF("Opening RHand\n");
         _RHand->grasp(0.0);
     }
-    else if(command.read(current_command) == "open LHand") {
+    else if(current_command.str() == "open LHand") {
+        DPRINTF("Opening LHand\n");
         _LHand->grasp(0.0);
     }
-    else if(command.read(current_command) == "close RHand") {
+    else if(current_command.str() == "close RHand") {
+        DPRINTF("Closing RHand\n");
         _RHand->grasp(1.0);
     }
-    else if(command.read(current_command) == "close LHand") {
+    else if(current_command.str() == "close LHand") {
+        DPRINTF("Closing LHand\n");
         _LHand->grasp(1.0);
     }
     
