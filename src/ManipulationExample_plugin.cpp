@@ -117,7 +117,7 @@ void ManipulationExample::on_start(double time)
     
     // prapere the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "Waist";
+    srv.request.segment_trj.header.frame_id = "world";
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
     
