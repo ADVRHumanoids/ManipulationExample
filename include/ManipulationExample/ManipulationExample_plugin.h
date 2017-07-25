@@ -25,6 +25,7 @@
 #include <ros/ros.h>
 
 #include <ADVR_ROS/advr_segment_control.h>
+#include <ADVR_ROS/advr_grasp_control_srv.h>
 
 #include <trajectory_utils/segment.h>
 #include <trajectory_utils/Cartesian.h>
@@ -70,12 +71,9 @@ private:
     XBot::MatLogger::Ptr _logger;
     
     std::shared_ptr<ros::NodeHandle> _nh;
-    ros::ServiceClient _client;
+    ros::ServiceClient _client, _grasp_client;
     ros::Subscriber _feedBack;
     bool manipulation_status;
-    
-    XBot::Hand::Ptr _LHand;
-    XBot::Hand::Ptr _RHand;
 
 };
 
