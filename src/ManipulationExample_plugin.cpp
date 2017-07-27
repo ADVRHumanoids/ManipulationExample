@@ -146,11 +146,11 @@ void ManipulationExample::on_start(double time)
 //         _LHand = l_hand_it->second;
 //     }
       
-      ADVR_ROS::advr_grasp_control_srv srv;
-      srv.request.right_grasp = 0.0;
-      srv.request.left_grasp = 1.0;
-       // call the service
-      _grasp_client.call(srv);
+//       ADVR_ROS::advr_grasp_control_srv srv;
+//       srv.request.right_grasp = 0.0;
+//       srv.request.left_grasp = 1.0;
+//        // call the service
+//       _grasp_client.call(srv);
     
 }
 
@@ -193,29 +193,38 @@ void ManipulationExample::control_loop(double time, double period)
 //     _robot->move();
 
 
-//     ADVR_ROS::advr_grasp_control srv;
-//     
-//     command.read(current_command);
-//     
-//     if(current_command.str() == "open RHand" && (_RHand != nullptr)) {
-//         DPRINTF("Opening RHand\n");
-//         srv.request.grasp = false;
-//     }
-//     else if(current_command.str() == "open LHand" && (_LHand != nullptr)) {
-//         DPRINTF("Opening LHand\n");
-//          srv.request.grasp = false;
-//     }
-//     else if(current_command.str() == "close RHand" && (_RHand != nullptr)) {
-//         DPRINTF("Closing RHand\n");
-//          srv.request.grasp = true;
-//     }
-//     else if(current_command.str() == "close LHand" && (_LHand != nullptr)) {
-//         DPRINTF("Closing LHand\n");
-//          srv.request.grasp = true;
-//     }
-//     
-//       // call the service
-//       _client.call(srv);
+    ADVR_ROS::advr_grasp_control_srv srv;
+    
+    command.read(current_command);
+    
+    if(current_command.str() == "open RHand") {
+        DPRINTF("Opening RHand\n");
+        srv.request.right_grasp = 0.0;
+        srv.request.left_grasp = 0.0;
+        // call the service
+        _grasp_client.call(srv);
+    }
+    else if(current_command.str() == "open LHand") {
+        DPRINTF("Opening LHand\n");
+        srv.request.right_grasp = 0.0;
+        srv.request.left_grasp = 0.0;
+        // call the service
+        _grasp_client.call(srv);
+    }
+    else if(current_command.str() == "close RHand") {
+        DPRINTF("Closing RHand\n");
+        srv.request.right_grasp = 1.0;
+        srv.request.left_grasp = 0.0;
+        // call the service
+        _grasp_client.call(srv);
+    }
+    else if(current_command.str() == "close LHand") {
+        DPRINTF("Closing LHand\n");
+        srv.request.right_grasp = 0.0;
+        srv.request.left_grasp = 1.0;
+        // call the service
+        _grasp_client.call(srv);
+    }
      
     if (manipulation_status == false){
         
