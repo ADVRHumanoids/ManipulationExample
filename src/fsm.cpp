@@ -1,7 +1,9 @@
-#include "fsm.h"
-#include <eigen_conversions/eigen_msg.h>
 #include <string>
+#include <eigen_conversions/eigen_msg.h>
 
+
+#include "fsm.h"
+#include "vision_io.cpp"
 
 //Begin Home State
 void myfsm::Home::react (const XBot::FSM::Event& e)

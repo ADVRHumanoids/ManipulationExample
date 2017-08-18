@@ -39,8 +39,21 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(MacroYCMInstallLibrary)
 
+# Set CUDA path
+set(CUDA_TOOLKIT_ROOT_DIR /usr/local/cuda-8.0)
+#message(${CUDA_TOOLKIT_ROOT_DIR})
+
 # find required packages
 find_package(XCM REQUIRED)
+
+# Anh - For vision module
+find_package(OpenCV REQUIRED)
+find_package(PCL 1.7 REQUIRED)
+find_package(image_transport REQUIRED)
+find_package(cv_bridge REQUIRED)
+find_package(roscpp REQUIRED)
+
+
 
 # XENOMAI
 set(ENABLE_XENO CACHE BOOL "ON")
