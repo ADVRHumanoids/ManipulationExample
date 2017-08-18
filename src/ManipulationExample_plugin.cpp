@@ -58,27 +58,30 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
 
     /* Save robot to a private member. */
     _robot = robot;
+    
+    // log
+    _logger = XBot::MatLogger::getLogger("/tmp/ManipulationExample_log");
 
     
-    // HOMING 
-    _robot->getRobotState("home", _q_home);
-    _robot->sense();
-    _robot->getJointPosition(_q0);
-    _robot->getStiffness(_k0);
-    _robot->getDamping(_d0);
-    _k = _k0;
-    _d = _d0;
-    _q = _q0;
-    _qref = _q0;
-
-    std::cout << "_q_home from SRDF : " << _q_home << std::endl;
-    _time = 0;
-    _homing_time = 4;
-
-    _robot->print();
-
-    _l_hand_pos = _l_hand_ref = 0.0;
-    _close_hand = true;
+//     // HOMING 
+//     _robot->getRobotState("home", _q_home);
+//     _robot->sense();
+//     _robot->getJointPosition(_q0);
+//     _robot->getStiffness(_k0);
+//     _robot->getDamping(_d0);
+//     _k = _k0;
+//     _d = _d0;
+//     _q = _q0;
+//     _qref = _q0;
+// 
+//     std::cout << "_q_home from SRDF : " << _q_home << std::endl;
+//     _time = 0;
+//     _homing_time = 4;
+// 
+//     _robot->print();
+// 
+//     _l_hand_pos = _l_hand_ref = 0.0;
+//     _close_hand = true;
 
     
     
@@ -109,6 +112,7 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     fsm.register_state(std::make_shared<myfsm::Grasp_RH_Done>());
     
     // Initialize the FSM with the initial state
+    _robot->getJointPosition(fsm.shared_data()._q0);
     fsm.init("Home");
     
     
@@ -184,13 +188,16 @@ void ManipulationExample::on_start(double time)
 //     ros::spinOnce();
     
     
-    // for homing
-    _first_loop_time = time;
-    _robot->sense();
-    _robot->getJointPosition(_q0);
-    std::cout << name << " HOMING STARTED++--*--*!!!" << std::endl;
+//     // for homing
+//     _first_loop_time = time;
+//     _robot->sense();
+//     _robot->getJointPosition(_q0);
+//     std::cout << name << " HOMING STARTED++--*--*!!!" << std::endl;
     
-//     std::cout << name << "NO HOMING STARTED" << std::endl;
+    _robot->getMotorPosition(fsm.shared_data()._q0);
+    _start_time = time;
+    
+    std::cout << name << "NO HOMING YET" << std::endl;
     
 }
 
@@ -212,19 +219,21 @@ void ManipulationExample::control_loop(double time, double period)
      * operations that are not rt-safe. */
     
     
-    // Go to homing
-    if( (time - _first_loop_time) <= _homing_time ){
-        _q = _q0 + 0.5*(1-std::cos(3.1415*(time - _first_loop_time)/_homing_time))*(_q_home-_q0);
-        _robot->setPositionReference(_q);
-        _robot->move();
-        return;
-
-    }
+//     // Go to homing
+//     if( (time - _first_loop_time) <= _homing_time ){
+//         _q = _q0 + 0.5*(1-std::cos(3.1415*(time - _first_loop_time)/_homing_time))*(_q_home-_q0);
+//         _robot->setPositionReference(_q);
+//         _robot->move();
+//         return;
+// 
+//     }
     
     // Run fsm
     fsm.run(time, 0.01);
     
-    return;
+    // Spin ROS
+    ros::spinOnce();
+    
 
 }
 

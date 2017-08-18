@@ -80,6 +80,8 @@ namespace XBotPlugin
 	// State Machine
 	XBot::FSM::StateMachine< myfsm::MacroState , myfsm::SharedData > fsm;
 	
+	// Utils
+	double _start_time;
     };
 
 }
