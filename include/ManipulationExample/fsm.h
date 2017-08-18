@@ -37,6 +37,8 @@
 #include <tf/transform_listener.h>
 #include <Eigen/Dense>
 
+
+
 namespace myfsm{
 
 /*Example how to define a custom Event*/
@@ -78,6 +80,9 @@ namespace myfsm{
 	
 	// Working frame id
 	std::string frame_id_ = "world_odom";
+	
+	// VisionIO
+	//VisionIO vio;
 	
     };
     

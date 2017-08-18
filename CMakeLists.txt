@@ -64,9 +64,27 @@ endif()
 # include
 include_directories(include/${PROJECT_NAME}
                     ${XCM_INCLUDE_DIRS}
+                    
+                    ${PCL_INCLUDE_DIRS}
+                    ${OpenCV_INCLUDE_DIRS}
+                    ${cv_bridge_INCLUDE_DIRS}
+                    ${image_transport_INCLUDE_DIRS}
+                            
                     )
 
-# lib
+# Vision libs
+#link_directories(${PCL_LIBRARY_DIRS})
+#add_definitions(${PCL_DEFINITIONS})
+
+set(LIBRARIES ${PCL_LIBRARIES} 
+              #${catkin_LIBRARIES}
+              ${OpenCV_LIBS}
+              ${cv_bridge_LIBRARIES}
+              ${image_transport_LIBRARIES}
+              )      
+              
+              
+# Main source
 add_library(${PROJECT_NAME} SHARED
     src/ManipulationExample_plugin.cpp src/fsm.cpp
 )

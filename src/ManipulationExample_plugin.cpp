@@ -20,11 +20,48 @@
 #include <ManipulationExample_plugin.h>
 #include <eigen_conversions/eigen_msg.h>
 
+
+
+//ROS
+#include <ros/ros.h>
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/image_encodings.h>
+#include <image_transport/image_transport.h>
+
+
+
+//OpenCV
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+//PCL
+#include <pcl/features/feature.h>
+#include <pcl/common/centroid.h>
+#include <pcl/common/time.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <boost/thread/thread.hpp>
+#include <pcl/common/common_headers.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/visualization/pcl_visualizer.h>
+
+//my_cv_bridge
+#include <cv_bridge/cv_bridge.h>
+
+
 /* Specify that the class XBotPlugin::ManipulationExample is a XBot RT plugin with name "ManipulationExample" */
 REGISTER_XBOT_PLUGIN(ManipulationExample, XBotPlugin::ManipulationExample)
 
 namespace XBotPlugin {
 
+
+// Add constructor    
+ManipulationExample::ManipulationExample(): point_cloud_ptr (new pcl::PointCloud<pcl::PointXYZ>)
+{
+
+}
+
+	
 bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
                                                     XBot::SharedMemory::Ptr shared_memory,
                                                     XBot::RobotInterface::Ptr robot)
@@ -115,10 +152,16 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     _robot->getJointPosition(fsm.shared_data()._q0);
     fsm.init("Home");
     
+
+    // Vision
+    sub_rgb = (*_nh).subscribe ("/multisense/left/image_color", 1, &ManipulationExample::rgb_callback, this);
+    sub_depth = (*_nh).subscribe ("/multisense/depth", 1, &ManipulationExample::depth_callback, this);
+    sub_camera_info = (*_nh).subscribe("/multisense/left/camera_info", 1, &ManipulationExample::camera_info_callback, this);
+    //sub_point_cloud = (*_nh).subscribe("/multisense/organized_image_points2", 1, &ManipulationExample::pointcloud_callback, this); // Real camera
+    sub_point_cloud = (*_nh).subscribe("/multisense/points2", 1, &ManipulationExample::pointcloud_callback, this); // In simulation
+
     
-    // Init variables
-
-
+  
 
     return true;
 
@@ -247,6 +290,82 @@ bool ManipulationExample::close()
 
     return true;
 }
+
+
+void ManipulationExample::camera_info_callback(const sensor_msgs::CameraInfoPtr& msg)
+{
+    camera_info[0] = msg->K[0]; //fx
+    camera_info[1] = msg->K[4]; //fy
+    camera_info[2] = msg->K[2]; //cx
+    camera_info[3] = msg->K[5]; //cy
+    
+    camera_width = msg->width;
+    camera_height = msg->height;
+
+//     std::cout << "... Camera info:" << std::endl;
+//     std::cout << "             fx:" << camera_info[0] << std::endl;
+//     std::cout << "             fy:" << camera_info[1] << std::endl;
+//     std::cout << "             cx:" << camera_info[2] << std::endl;
+//     std::cout << "             cy:" << camera_info[3] << std::endl;
+//     std::cout << "          width:" << camera_width   << std::endl;
+//     std::cout << "         height:" << camera_height  << std::endl;
+
+}
+
+
+
+void ManipulationExample::rgb_callback(const sensor_msgs::ImageConstPtr& msg)
+{
+    cv_bridge::CvImageConstPtr cv_ptr1;
+    try
+    {
+	cv_ptr1 = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+	rgb_img = cv_ptr1->image;
+	
+	cv::imshow("RGB Image", rgb_img);
+	cv::waitKey(1); // to show image
+	
+    }
+    catch (cv_bridge::Exception& ex)
+    {
+	ROS_ERROR("cv_bridge exception: %s", ex.what());
+    }
+}
+
+void ManipulationExample::depth_callback(const sensor_msgs::ImageConstPtr& msg)
+{
+
+    cv_bridge::CvImageConstPtr cv_ptr;
+    try
+    {
+	cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_32FC1);
+	dep_img = cv_ptr->image;
+    }
+    catch (cv_bridge::Exception& ex)
+    {
+	ROS_ERROR("cv_bridge exception: %s", ex.what());
+    }
+
+//    cv::imshow("BGR8", cv_ptr->image);
+//    cv::imshow("RGB8", cv_ptr_2->image);
+//    cv::waitKey(30); // to show image
+ 
+}
+
+
+void ManipulationExample::pointcloud_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
+{
+    
+//  cout << "I'm in stereo CB ..." << endl;
+    pcl::fromROSMsg(*msg, *point_cloud_ptr);
+    std::cout << "Point cloud size in CB: " << point_cloud_ptr->points.size() << endl;
+    
+}
+
+
+
+
+
 
 
 

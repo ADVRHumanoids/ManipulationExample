@@ -29,7 +29,26 @@
 #include <trajectory_utils/segment.h>
 #include <trajectory_utils/Cartesian.h>
 
+// FSM
 #include "fsm.h"
+
+//ROS
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/image_encodings.h>
+#include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
+
+//OpenCV
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+//PCL
+#include <pcl/features/feature.h>
+#include <pcl/common/centroid.h>
+#include <pcl/common/time.h>
+#include <pcl_conversions/pcl_conversions.h>
+
 
 namespace XBotPlugin 
 {
@@ -45,12 +64,17 @@ namespace XBotPlugin
 	virtual bool init_control_plugin(std::string path_to_config_file,
 					XBot::SharedMemory::Ptr shared_memory,
 					XBot::RobotInterface::Ptr robot);
-
 	virtual bool close();
-
 	virtual void on_start(double time);
-
 	virtual void on_stop(double time);
+	
+	ManipulationExample();
+
+	
+	
+	
+
+	
 
     protected:
 
@@ -82,6 +106,25 @@ namespace XBotPlugin
 	
 	// Utils
 	double _start_time;
+	
+	// Vision
+	ros::Subscriber sub_rgb;
+	ros::Subscriber sub_depth;
+	ros::Subscriber sub_camera_info;
+	ros::Subscriber sub_point_cloud;
+ 	double camera_info[4]; // fx, fy, cx, cy --> camera details
+ 	int camera_width, camera_height;
+	cv::Mat rgb_img, dep_img;
+	//pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud_ptr (new pcl::PointCloud<pcl::PointXYZ>);
+	pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud_ptr;
+	
+	// Callback for camera
+	virtual void rgb_callback (const sensor_msgs::ImageConstPtr& msg);
+        virtual void depth_callback (const sensor_msgs::ImageConstPtr& msg);   
+	virtual void camera_info_callback (const sensor_msgs::CameraInfoPtr & msg);
+        virtual void pointcloud_callback (const sensor_msgs::PointCloud2ConstPtr & msg);
+
+
     };
 
 }

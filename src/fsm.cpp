@@ -3,7 +3,8 @@
 
 
 #include "fsm.h"
-#include "vision_io.cpp"
+#include "vision_io.h"
+
 
 //Begin Home State
 void myfsm::Home::react (const XBot::FSM::Event& e)
@@ -19,7 +20,19 @@ void myfsm::Home::entry (const XBot::FSM::Message& msg)
 void myfsm::Home::run (double time, double period)
 {
     std::cout << "State: Home run" << std::endl;
+    
+  
 
+//       // Init variables
+//     VisionIO vio(1); // init vision io object. 0 for Asus; 1 for Multisense
+// 
+//     cv::Mat rgb_img = vio.getRGBImage();
+//     cv::Mat dep_img = vio.getDepImage();
+//     pcl::PointCloud<pcl::PointXYZ>::Ptr pclp = vio.getPointCloud();
+//     int cam_width, cam_height;
+//     vio.getCameraInfo(cam_width, cam_height);
+//     std::cout << "cam width: " << cam_width << " --- cam height: " << cam_height << std::endl;
+    
     // blocking reading: wait for a command
     //if(!shared_data().command.read(shared_data().current_command))
     //  std::cout << shared_data().current_command.str() << std::endl;
