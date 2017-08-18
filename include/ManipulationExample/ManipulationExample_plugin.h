@@ -29,7 +29,7 @@
 #include <trajectory_utils/segment.h>
 #include <trajectory_utils/Cartesian.h>
 
-#include "FiniteStateMachine.h"
+#include "fsm.h"
 
 namespace XBotPlugin 
 {
