@@ -15,6 +15,7 @@
 #include <pcl/point_types.h>
 
 
+
 cv::Mat VisionIO::getRGBImage()
 {
 	return rgb_img;

@@ -37,6 +37,8 @@
 #include <sensor_msgs/image_encodings.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
+#include "std_msgs/String.h"
+
 
 //OpenCV
 #include <opencv2/opencv.hpp>
@@ -112,17 +114,22 @@ namespace XBotPlugin
 	ros::Subscriber sub_depth;
 	ros::Subscriber sub_camera_info;
 	ros::Subscriber sub_point_cloud;
+	ros::Subscriber sub_vision_data; // Subscriber to message from vision module
+	
+	std::string vision_string;
  	double camera_info[4]; // fx, fy, cx, cy --> camera details
  	int camera_width, camera_height;
 	cv::Mat rgb_img, dep_img;
 	//pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud_ptr (new pcl::PointCloud<pcl::PointXYZ>);
 	pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud_ptr;
 	
+	
 	// Callback for camera
 	virtual void rgb_callback (const sensor_msgs::ImageConstPtr& msg);
         virtual void depth_callback (const sensor_msgs::ImageConstPtr& msg);   
 	virtual void camera_info_callback (const sensor_msgs::CameraInfoPtr & msg);
         virtual void pointcloud_callback (const sensor_msgs::PointCloud2ConstPtr & msg);
+	virtual void vision_data_callback (const std_msgs::String::ConstPtr& msg);
 
 
     };

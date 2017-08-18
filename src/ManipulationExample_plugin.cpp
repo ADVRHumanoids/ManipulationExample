@@ -121,7 +121,6 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
 //     _close_hand = true;
 
     
-    
     // ROS
     int argc = 1;
     const char *arg = "dummy_arg";
@@ -132,8 +131,16 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     _nh = std::shared_ptr<ros::NodeHandle>(node_handle);
 
     
+    // Vision
+    sub_rgb = (*_nh).subscribe ("/multisense/left/image_color", 1, &ManipulationExample::rgb_callback, this);
+    sub_depth = (*_nh).subscribe ("/multisense/depth", 1, &ManipulationExample::depth_callback, this);
+    sub_camera_info = (*_nh).subscribe("/multisense/left/camera_info", 1, &ManipulationExample::camera_info_callback, this);
+    //sub_point_cloud = (*_nh).subscribe("/multisense/organized_image_points2", 1, &ManipulationExample::pointcloud_callback, this); // Real camera
+    sub_point_cloud = (*_nh).subscribe("/multisense/points2", 1, &ManipulationExample::pointcloud_callback, this); // In simulation
+    sub_vision_data = (*_nh).subscribe("vision_data", 1, &ManipulationExample::vision_data_callback, this);  // get data from vision module
+    
 	
-    // FSM
+    // FSM robot
     fsm.shared_data().command = command;
     fsm.shared_data().current_command = current_command;
     fsm.shared_data()._client = _nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");
@@ -153,12 +160,6 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     fsm.init("Home");
     
 
-    // Vision
-    sub_rgb = (*_nh).subscribe ("/multisense/left/image_color", 1, &ManipulationExample::rgb_callback, this);
-    sub_depth = (*_nh).subscribe ("/multisense/depth", 1, &ManipulationExample::depth_callback, this);
-    sub_camera_info = (*_nh).subscribe("/multisense/left/camera_info", 1, &ManipulationExample::camera_info_callback, this);
-    //sub_point_cloud = (*_nh).subscribe("/multisense/organized_image_points2", 1, &ManipulationExample::pointcloud_callback, this); // Real camera
-    sub_point_cloud = (*_nh).subscribe("/multisense/points2", 1, &ManipulationExample::pointcloud_callback, this); // In simulation
 
     
   
@@ -358,8 +359,15 @@ void ManipulationExample::pointcloud_callback(const sensor_msgs::PointCloud2Cons
     
 //  cout << "I'm in stereo CB ..." << endl;
     pcl::fromROSMsg(*msg, *point_cloud_ptr);
-    std::cout << "Point cloud size in CB: " << point_cloud_ptr->points.size() << endl;
+    //std::cout << "Point cloud size in CB: " << point_cloud_ptr->points.size() << endl;
     
+}
+
+void ManipulationExample::vision_data_callback(const std_msgs::String::ConstPtr& msg)
+{
+
+     vision_string = msg->data.c_str();
+     std::cout << "Vision data string: " << vision_string << std::endl;
 }
 
 
