@@ -116,8 +116,8 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     fsm.init("Home");
     
     
-    // log
-    //_robot->initLog("/tmp/homing_example_log", 100000);
+    // Init variables
+
 
 
     return true;

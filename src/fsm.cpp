@@ -288,10 +288,10 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
     std::cout << "State: Move_LH entry" << std::endl;
 //     std::cout << "Pub /hose_pose for left hand..." << std::endl;
 
-//     // Wait for RH_Pose, i.e. the Hose Grasp Pose (hose_grasp_pose)
-//     shared_data ()._hose_grasp_pose =
-//     ros::topic::waitForMessage<geometry_msgs::PoseStamped>
-// 	(shared_data ().pose_cmd_);
+    // Wait for RH_Pose, i.e. the Hose Grasp Pose (hose_grasp_pose)
+    shared_data ()._hose_grasp_pose =
+    ros::topic::waitForMessage<geometry_msgs::PoseStamped>
+	(shared_data ().pose_cmd_);
 
     // Move LH to LH_Pose (1 mid point in the z-axis fixed dist)
 
@@ -338,11 +338,17 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
     geometry_msgs::PoseStamped r_end_hand_pose_stamped;
     r_end_hand_pose_stamped.pose = r_start_hand_pose;
 
-    //end_hand_pose_stamped.pose.position = shared_data()._hose_grasp_pose->pose.position;
+    end_hand_pose_stamped.pose.position = shared_data()._hose_grasp_pose->pose.position;
     
-    end_hand_pose_stamped.pose.position.x = 0.5;
-    end_hand_pose_stamped.pose.position.y = 0.1;
-    end_hand_pose_stamped.pose.position.z = 0.2;
+    //shared_data()._hose_grasp_pose->pose.position.x = 0.4;
+    //shared_data()._hose_grasp_pose->pose.position.y = 0.4;
+    //shared_data()._hose_grasp_pose->pose.position.z = 0.4;
+    
+    
+    
+//     end_hand_pose_stamped.pose.position.x = 0.5;
+//     end_hand_pose_stamped.pose.position.y = 0.1;
+//     end_hand_pose_stamped.pose.position.z = 0.2;
 
     //end_hand_pose_stamped.pose.orientation =
     //  shared_data()._hose_grasp_pose->pose.orientation;
@@ -363,23 +369,27 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
     s1.start = start_traj;   // start pose
     s1.end = end;            // end pose 
 
+    
     start_traj.frame = end_hand_pose_stamped;
 
     end_hand_pose_stamped.pose.position.z =
     shared_data()._hose_grasp_pose->pose.position.z;
     end.frame = end_hand_pose_stamped;
+    
+//     end_hand_pose_stamped.pose.position.z = 0.1;
+//     end.frame = end_hand_pose_stamped;
 
-    // define the first segment
-    trajectory_utils::segment s2;
-    s2.type.data = 0;        // min jerk traj
-    s2.T.data = 10.0;        // traj duration 1 second      
-    s2.start = start_traj;   // start pose
-    s2.end = end;            // end pose 
+//     // define the second segment
+//     trajectory_utils::segment s2;
+//     s2.type.data = 0;        // min jerk traj
+//     s2.T.data = 10.0;        // traj duration 1 second      
+//     s2.start = start_traj;   // start pose
+//     s2.end = end;            // end pose 
 
     // only one segment in this example
     std::vector<trajectory_utils::segment> segments;
     segments.push_back (s1);
-    segments.push_back (s2);
+    //segments.push_back (s2);
 
     // prapere the advr_segment_control
     ADVR_ROS::advr_segment_control srv;

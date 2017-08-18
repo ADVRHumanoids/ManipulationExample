@@ -63,6 +63,7 @@ namespace myfsm{
 
 	ros::ServiceClient _client;
 	geometry_msgs::PoseStamped::ConstPtr _hose_grasp_pose;
+	//geometry_msgs::PoseStamped _hose_grasp_pose;
 
 	XBot::SubscriberRT<XBot::Command> command;
 	XBot::Command current_command;
