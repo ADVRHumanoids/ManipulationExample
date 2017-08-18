@@ -22,7 +22,6 @@
 
 #include <XCM/XBotControlPlugin.h>
 
-#include "fsm.h"
 
 namespace XBotPlugin {
 
@@ -52,12 +51,12 @@ protected:
 private:
 
     XBot::RobotInterface::Ptr _robot;
+
     double _start_time;
+
     Eigen::VectorXd _q0;
+
     XBot::MatLogger::Ptr _logger;
-    
-    // add fsm
-    XBot::FSM::StateMachine< myfsm::MacroState , myfsm::SharedData > fsm;
 
 };
 
