@@ -37,7 +37,15 @@
 #include <tf/transform_listener.h>
 #include <Eigen/Dense>
 
+//PCL
+#include <pcl/features/feature.h>
+#include <pcl/common/centroid.h>
+#include <pcl/common/time.h>
+#include <pcl_conversions/pcl_conversions.h>
 
+// ROS
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Pose.h>
 
 namespace myfsm{
 
@@ -81,8 +89,10 @@ namespace myfsm{
 	// Working frame id
 	std::string frame_id_ = "world_odom";
 	
-	// VisionIO
-	//VisionIO vio;
+	// Vision data - copy from ManipulationExample object
+	pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud_ptr;  // keep point clouds
+	std::string vision_string;
+	
 	
     };
     

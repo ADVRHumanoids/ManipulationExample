@@ -20,14 +20,15 @@
 #include <ManipulationExample_plugin.h>
 #include <eigen_conversions/eigen_msg.h>
 
-
+#include <iostream>
 
 //ROS
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
 #include <image_transport/image_transport.h>
-
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Pose.h>
 
 
 //OpenCV
@@ -45,7 +46,7 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/visualization/pcl_visualizer.h>
 
-//my_cv_bridge
+//cv_bridge
 #include <cv_bridge/cv_bridge.h>
 
 
@@ -138,8 +139,15 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     //sub_point_cloud = (*_nh).subscribe("/multisense/organized_image_points2", 1, &ManipulationExample::pointcloud_callback, this); // Real camera
     sub_point_cloud = (*_nh).subscribe("/multisense/points2", 1, &ManipulationExample::pointcloud_callback, this); // In simulation
     sub_vision_data = (*_nh).subscribe("vision_data", 1, &ManipulationExample::vision_data_callback, this);  // get data from vision module
+    sub_point_right = (*_nh).subscribe("vs_point_right_2D", 1, &ManipulationExample::point_right_callback, this); 
     
-	
+    pub_pose_right_3D = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_pose_right_3D", 1);
+    
+//     // FSM vision
+//     fsm.shared_data().point_cloud_ptr = point_cloud_ptr;
+//     fsm.shared_data().vision_string = vision_string;
+    
+    
     // FSM robot
     fsm.shared_data().command = command;
     fsm.shared_data().current_command = current_command;
@@ -323,7 +331,7 @@ void ManipulationExample::rgb_callback(const sensor_msgs::ImageConstPtr& msg)
 	cv_ptr1 = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
 	rgb_img = cv_ptr1->image;
 	
-	cv::imshow("RGB Image", rgb_img);
+	cv::imshow("RGB Image - Robot", rgb_img);
 	cv::waitKey(1); // to show image
 	
     }
@@ -332,6 +340,7 @@ void ManipulationExample::rgb_callback(const sensor_msgs::ImageConstPtr& msg)
 	ROS_ERROR("cv_bridge exception: %s", ex.what());
     }
 }
+
 
 void ManipulationExample::depth_callback(const sensor_msgs::ImageConstPtr& msg)
 {
@@ -366,8 +375,51 @@ void ManipulationExample::pointcloud_callback(const sensor_msgs::PointCloud2Cons
 void ManipulationExample::vision_data_callback(const std_msgs::String::ConstPtr& msg)
 {
 
-     vision_string = msg->data.c_str();
-     std::cout << "Vision data string: " << vision_string << std::endl;
+    vision_string = msg->data.c_str();  // 7_0.999388_404_256_532_372_OBJandCEN_4_469_277_CENTROIDSeperator_5_474_319
+    std::cout << "Vision data string: " << vision_string << std::endl;
+    
+    // parse string to and get 3D centroid point
+    
+     
+     
+    //// send back to FSM - not work
+    //fsm.shared_data().vision_string = vision_string;
+}
+
+void ManipulationExample::point_right_callback(const geometry_msgs::Point::ConstPtr& msg)
+{
+    geometry_msgs::Point point_right;
+    point_right.x = msg->x;
+    point_right.y = msg->y;
+    point_right.z = msg->z;
+    
+    std::cout << "Got point_right_2D: " << point_right.x << " " << point_right.y << " " << point_right.z << std::endl;
+    
+    // transform to 3D
+    pcl::PointXYZ point_temp;
+    //point_temp = pclp->points[static_cast<int>(point2d.y)*cam_width + static_cast<int>(point2d.x)];
+    //point_temp = point_cloud_ptr->points[static_cast<int>(i)*camera_width + static_cast<int>(j)]; // i=row, j=colum
+    point_temp = point_cloud_ptr->points[static_cast<int>(point_right.y)*camera_width + static_cast<int>(point_right.x)];  
+    std::cout << "Point temp in 3D: " << point_temp.x << " " << point_temp.y << " " << point_temp.z << std::endl; // got point ok
+    
+    if (!std::isnan(point_temp.x) && point_temp.z > 0.3) //got a good real point
+    {
+	std::cout << "Point temp in 3D (good): " << point_temp.x << " " << point_temp.y << " " << point_temp.z << std::endl;
+	
+	grasp_pose_right.header.frame_id = ""; // check later
+	grasp_pose_right.pose.position.x = point_temp.x;
+	grasp_pose_right.pose.position.y = point_temp.y;
+	grasp_pose_right.pose.position.z = point_temp.z;
+	grasp_pose_right.pose.orientation.x = 0;
+	grasp_pose_right.pose.orientation.y = 0.1;
+	grasp_pose_right.pose.orientation.z = 0;
+	grasp_pose_right.pose.orientation.w = 1;
+	
+	pub_pose_right_3D.publish(grasp_pose_right); //publish ok
+	 
+	
+	
+    }
 }
 
 

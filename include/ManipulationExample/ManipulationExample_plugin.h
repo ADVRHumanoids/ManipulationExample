@@ -114,7 +114,12 @@ namespace XBotPlugin
 	ros::Subscriber sub_depth;
 	ros::Subscriber sub_camera_info;
 	ros::Subscriber sub_point_cloud;
-	ros::Subscriber sub_vision_data; // Subscriber to message from vision module
+	ros::Subscriber sub_vision_data; // Subscribe to message from vision module (as string)
+	ros::Subscriber sub_point_right; // SUbscribe to vs_point_right_2D topic
+	
+	ros::Publisher  pub_pose_right_3D; // Publish vision data (in 3D pose) to FSM
+	
+	geometry_msgs::PoseStamped grasp_pose_right;
 	
 	std::string vision_string;
  	double camera_info[4]; // fx, fy, cx, cy --> camera details
@@ -125,11 +130,12 @@ namespace XBotPlugin
 	
 	
 	// Callback for camera
-	virtual void rgb_callback (const sensor_msgs::ImageConstPtr& msg);
-        virtual void depth_callback (const sensor_msgs::ImageConstPtr& msg);   
+	virtual void rgb_callback (const sensor_msgs::ImageConstPtr & msg);
+        virtual void depth_callback (const sensor_msgs::ImageConstPtr & msg);   
 	virtual void camera_info_callback (const sensor_msgs::CameraInfoPtr & msg);
         virtual void pointcloud_callback (const sensor_msgs::PointCloud2ConstPtr & msg);
-	virtual void vision_data_callback (const std_msgs::String::ConstPtr& msg);
+	virtual void vision_data_callback (const std_msgs::String::ConstPtr & msg);
+	virtual void point_right_callback(const geometry_msgs::Point::ConstPtr & msg);
 
 
     };

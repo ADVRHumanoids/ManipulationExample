@@ -20,6 +20,8 @@ void myfsm::Home::run (double time, double period)
 {
     std::cout << "State: Home run" << std::endl;
     
+    std::string message_string = shared_data().vision_string;
+    std::cout << "--- Got message: in Home run: " << message_string << std::endl;
     
     // blocking reading: wait for a command
     //if(!shared_data().command.read(shared_data().current_command))
@@ -295,6 +297,9 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
     shared_data ()._hose_grasp_pose =
     ros::topic::waitForMessage<geometry_msgs::PoseStamped>
 	(shared_data ().pose_cmd_);
+	
+	
+	
 
     // Move LH to LH_Pose (1 mid point in the z-axis fixed dist)
 
