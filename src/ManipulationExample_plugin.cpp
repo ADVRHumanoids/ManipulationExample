@@ -407,6 +407,7 @@ void ManipulationExample::point_right_callback(const geometry_msgs::Point::Const
 	std::cout << "Point temp in 3D (good): " << point_temp.x << " " << point_temp.y << " " << point_temp.z << std::endl;
 	
 	grasp_pose_right.header.frame_id = "multisense/left_camera_optical_frame"; // check later
+	//grasp_pose_right.header.frame_id = "world"; // do not work
 	grasp_pose_right.pose.position.x = point_temp.x;
 	grasp_pose_right.pose.position.y = point_temp.y;
 	grasp_pose_right.pose.position.z = point_temp.z;
