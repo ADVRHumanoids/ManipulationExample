@@ -125,7 +125,7 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
 // 	(shared_data ().pose_cmd_);
 
     //     // Wait for RH_Pose, i.e. the Hose Grasp Pose (hose_grasp_pose)
-    shared_data ().rh_grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().rh_grasp_pose_topic);
+    //shared_data ().rh_grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().rh_grasp_pose_topic);
 	
 	
 
@@ -188,17 +188,18 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
     //end_hand_pose_stamped.pose = start_hand_pose;
 
     geometry_msgs::PoseStamped r_end_hand_pose_stamped;
-//     r_end_hand_pose_stamped.pose = r_start_hand_pose;
-//     r_end_hand_pose_stamped.pose.position.x = 0;
-//     r_end_hand_pose_stamped.pose.position.y = 0;
-//     r_end_hand_pose_stamped.pose.position.z = 1;
-//     r_end_hand_pose_stamped.pose.orientation.x = 0;
-//     r_end_hand_pose_stamped.pose.orientation.y = 0;
-//     r_end_hand_pose_stamped.pose.orientation.z = 0;
-//     r_end_hand_pose_stamped.pose.orientation.w = 1;
+
+    r_end_hand_pose_stamped.pose.position.x = 0.619;
+    r_end_hand_pose_stamped.pose.position.y = -0.29;
+    r_end_hand_pose_stamped.pose.position.z = 0.873;
+    r_end_hand_pose_stamped.pose.orientation.x = 0;
+    r_end_hand_pose_stamped.pose.orientation.y = -0.5591931143131625;
+    r_end_hand_pose_stamped.pose.orientation.z = 0;
+    r_end_hand_pose_stamped.pose.orientation.w = 0.8290374303399975;
+    shared_data().rh_grasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(r_end_hand_pose_stamped));
     
 
-    r_end_hand_pose_stamped.pose = shared_data().rh_grasp_pose->pose;    
+    //r_end_hand_pose_stamped.pose = shared_data().rh_grasp_pose->pose;    
 //     r_end_hand_pose_stamped.pose.position = shared_data().rh_grasp_pose->pose.position;    
 //     r_end_hand_pose_stamped.pose.orientation.x = 0;
 //     r_end_hand_pose_stamped.pose.orientation.y = 0;
@@ -212,7 +213,8 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
     //end.distal_frame = "LSoftHand";
     //end.frame = end_hand_pose_stamped;
     end.distal_frame = "RSoftHand";
-    end.frame = r_end_hand_pose_stamped;
+    //end.frame = r_end_hand_pose_stamped;
+    end.frame = *shared_data().rh_grasp_pose; // rh_grasp_pose is a pointer --> need *
 
     // define the first segment
     trajectory_utils::segment s1;
