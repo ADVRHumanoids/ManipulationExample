@@ -77,62 +77,62 @@ void myfsm::Idle::run (double time, double period)
 // 
     
     
-//     // blocking reading: wait for a command
-//     if(shared_data().command.read(shared_data().current_command))
-//     {
-// 	std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+    // blocking reading: wait for a command
+    if(shared_data().command.read(shared_data().current_command))
+    {
+	std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+
+	// RH Move failed
+	if (!shared_data().current_command.str().compare("move"))
+	    transit("Move_RH");
+    }
+    
+    
+//     // Test transform
+//     shared_data()._robot->sense();
+//     Eigen::Affine3d world_T_bl;
+//     std::string fb;
+//     shared_data()._robot->model().getFloatingBaseLink(fb);
+//     std::cout << "--- floating base link: " << fb << std::endl;
+//     
+//     tf.getTransformTf(fb, shared_data ().frame_id_, world_T_bl);
+//     std::cout << "--- Affine3d world_T_bl: " << world_T_bl.matrix() << std::endl;
+//     
+//     shared_data()._robot->model().setFloatingBasePose(world_T_bl);
+//     shared_data()._robot->model().update();
 // 
-// 	// RH Move failed
-// 	if (!shared_data().current_command.str().compare("move"))
-// 	    transit("Move_RH");
-//     }
-    
-    
-    // Test transform
-    shared_data()._robot->sense();
-    Eigen::Affine3d world_T_bl;
-    std::string fb;
-    shared_data()._robot->model().getFloatingBaseLink(fb);
-    std::cout << "--- floating base link: " << fb << std::endl;
-    
-    tf.getTransformTf(fb, shared_data ().frame_id_, world_T_bl);
-    std::cout << "--- Affine3d world_T_bl: " << world_T_bl.matrix() << std::endl;
-    
-    shared_data()._robot->model().setFloatingBasePose(world_T_bl);
-    shared_data()._robot->model().update();
-
-    // Get current hand
-    KDL::Frame hand_pose_KDL;
-    Eigen::Affine3d hand_pose, r_hand_pose, camera_to_world;
-    geometry_msgs::Pose start_hand_pose, r_start_hand_pose, camera_pose_msgs;
-
-    // Get hands poses
-    //shared_data()._robot->model().getPose("LSoftHand", hand_pose);
-    //shared_data().sl_hand_pose = hand_pose;
-    shared_data()._robot->model().getPose("RSoftHand", r_hand_pose);
-    shared_data().sr_hand_pose = r_hand_pose;
-    
-    //// Get camera pose: will transform a point from camera_frame to world frame ???
-    //shared_data()._robot->model().getPose("multisense/left_camera_optical_frame", camera_to_world);
-    
-
-
-    // Transform from Eigen::Affine3d to geometry_msgs::Pose
-    //tf::poseEigenToMsg (hand_pose, start_hand_pose);
-    tf::poseEigenToMsg (r_hand_pose, r_start_hand_pose);
-
-    // Define the start frame as geometry_msgs::PoseStamped
-    //geometry_msgs::PoseStamped start_hand_pose_stamped;
-    //start_hand_pose_stamped.pose = start_hand_pose;
-    geometry_msgs::PoseStamped r_start_hand_pose_stamped;
-    r_start_hand_pose_stamped.pose = r_start_hand_pose;
-
-    // Create the Cartesian trajectories
-    trajectory_utils::Cartesian start_traj;
-    //start_traj.distal_frame = "LSoftHand";
-    //start_traj.frame = start_hand_pose_stamped;
-    start_traj.distal_frame = "RSoftHand";
-    start_traj.frame = r_start_hand_pose_stamped;
+//     // Get current hand
+//     KDL::Frame hand_pose_KDL;
+//     Eigen::Affine3d hand_pose, r_hand_pose, camera_to_world;
+//     geometry_msgs::Pose start_hand_pose, r_start_hand_pose, camera_pose_msgs;
+// 
+//     // Get hands poses
+//     //shared_data()._robot->model().getPose("LSoftHand", hand_pose);
+//     //shared_data().sl_hand_pose = hand_pose;
+//     shared_data()._robot->model().getPose("RSoftHand", r_hand_pose);
+//     shared_data().sr_hand_pose = r_hand_pose;
+//     
+//     //// Get camera pose: will transform a point from camera_frame to world frame ???
+//     //shared_data()._robot->model().getPose("multisense/left_camera_optical_frame", camera_to_world);
+//     
+// 
+// 
+//     // Transform from Eigen::Affine3d to geometry_msgs::Pose
+//     //tf::poseEigenToMsg (hand_pose, start_hand_pose);
+//     tf::poseEigenToMsg (r_hand_pose, r_start_hand_pose);
+// 
+//     // Define the start frame as geometry_msgs::PoseStamped
+//     //geometry_msgs::PoseStamped start_hand_pose_stamped;
+//     //start_hand_pose_stamped.pose = start_hand_pose;
+//     geometry_msgs::PoseStamped r_start_hand_pose_stamped;
+//     r_start_hand_pose_stamped.pose = r_start_hand_pose;
+// 
+//     // Create the Cartesian trajectories
+//     trajectory_utils::Cartesian start_traj;
+//     //start_traj.distal_frame = "LSoftHand";
+//     //start_traj.frame = start_hand_pose_stamped;
+//     start_traj.distal_frame = "RSoftHand";
+//     start_traj.frame = r_start_hand_pose_stamped;
     
     
 
@@ -148,75 +148,76 @@ void myfsm::Idle::run (double time, double period)
 //     // need to cast the variable as the pointer --> reverse later!!!
 //     shared_data().rh_grasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(r_end_hand_pose_stamped));
     
-    //// define the end frame - from vision module
-    // wait for vision message
-    shared_data ().rh_grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().rh_grasp_pose_topic);
-    
-    // convert object pose message to eigen
-    tf::Transform tf_cam_to_target;
-    geometry_msgs::Pose temp_pose;
-    temp_pose.position = shared_data().rh_grasp_pose->pose.position;
-    temp_pose.orientation = shared_data().rh_grasp_pose->pose.orientation;
-    tf::poseMsgToTF(temp_pose, tf_cam_to_target);
-    geometry_msgs::Transform gt_cam_to_target;
-    tf::transformTFToMsg(tf_cam_to_target, gt_cam_to_target);
-    Eigen::Affine3d cam_to_object;
-    tf::transformMsgToEigen(gt_cam_to_target, cam_to_object);
-    
-  
-    // get transformation from world to cam
-    Eigen::Affine3d world_to_cam;
-    tf.getTransformTf("world_odom", "multisense/left_camera_optical_frame", world_to_cam);
-    // get final world to object transform
-    Eigen::Affine3d world_to_object;
-    world_to_object = world_to_cam * cam_to_object;
-    // Transform from Eigen::Affine3d to geometry_msgs::Pose
-    geometry_msgs::Pose rh_grasp_pose_final;
-    tf::poseEigenToMsg (world_to_object, rh_grasp_pose_final);      
-    
-    // keep the position only
-    geometry_msgs::PoseStamped temp_pose_stamp;
-    temp_pose_stamp.pose.position = rh_grasp_pose_final.position;
-    std::cout << "--- POSITION 1: " << temp_pose_stamp.pose.position.x << " " 
-					    << temp_pose_stamp.pose.position.y << " " 
-					    << temp_pose_stamp.pose.position.z << std::endl;
+//     //// define the end frame - from vision module
+//     // wait for vision message
+//     shared_data ().rh_grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().rh_grasp_pose_topic);
+//     
+//     // convert object pose message to eigen
+//     tf::Transform tf_cam_to_target;
+//     geometry_msgs::Pose temp_pose;
+//     temp_pose.position = shared_data().rh_grasp_pose->pose.position;
+//     temp_pose.orientation = shared_data().rh_grasp_pose->pose.orientation;
+//     tf::poseMsgToTF(temp_pose, tf_cam_to_target);
+//     geometry_msgs::Transform gt_cam_to_target;
+//     tf::transformTFToMsg(tf_cam_to_target, gt_cam_to_target);
+//     Eigen::Affine3d cam_to_object;
+//     tf::transformMsgToEigen(gt_cam_to_target, cam_to_object);
+//     
+//   
+//     // get transformation from world to cam
+//     Eigen::Affine3d world_to_cam;
+//     //tf.getTransformTf("world_odom", "multisense/left_camera_optical_frame", world_to_cam);
+//     tf.getTransformTf("multisense/left_camera_optical_frame", "world_odom", world_to_cam);
+//     // get final world to object transform
+//     Eigen::Affine3d world_to_object;
+//     world_to_object = world_to_cam * cam_to_object;
+//     // Transform from Eigen::Affine3d to geometry_msgs::Pose
+//     geometry_msgs::Pose rh_grasp_pose_final;
+//     tf::poseEigenToMsg (world_to_object, rh_grasp_pose_final);      
+//     
+//     // keep the position only
+//     geometry_msgs::PoseStamped temp_pose_stamp;
+//     temp_pose_stamp.pose.position = rh_grasp_pose_final.position;
+//     std::cout << "--- POSITION 1: " << temp_pose_stamp.pose.position.x << " " 
+// 				    << temp_pose_stamp.pose.position.y << " " 
+// 				    << temp_pose_stamp.pose.position.z << std::endl;
+// //     temp_pose_stamp.pose.orientation.x = 0;
+// //     temp_pose_stamp.pose.orientation.y = -0.5591931143131625;
+// //     temp_pose_stamp.pose.orientation.z = 0;
+// //     temp_pose_stamp.pose.orientation.w = 0.8290374303399975;
 //     temp_pose_stamp.pose.orientation.x = 0;
-//     temp_pose_stamp.pose.orientation.y = -0.5591931143131625;
+//     temp_pose_stamp.pose.orientation.y = 0;
 //     temp_pose_stamp.pose.orientation.z = 0;
-//     temp_pose_stamp.pose.orientation.w = 0.8290374303399975;
-    temp_pose_stamp.pose.orientation.x = 0;
-    temp_pose_stamp.pose.orientation.y = 0;
-    temp_pose_stamp.pose.orientation.z = 0;
-    temp_pose_stamp.pose.orientation.w = 1;
-    temp_pose_stamp.header.frame_id = "world_odom";
-    // need to cast the variable as the pointer --> reverse later!!!
-    shared_data().rh_grasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(temp_pose_stamp));
-     
-    shared_data()._pub_obj_in_world.publish (temp_pose_stamp);
-    
-
-    // 2ND TRY
-    tf::StampedTransform tf_world_to_cam;
-    tf.getTransformTf_direct("world_odom", "multisense/left_camera_optical_frame", tf_world_to_cam);
-    
-    tf::Transform tf_world_to_obj;
-    tf_world_to_obj = tf_world_to_cam * tf_cam_to_target;
-    geometry_msgs::Pose temp_pose2;
-    tf::poseTFToMsg(tf_world_to_obj, temp_pose2);
-    geometry_msgs::PoseStamped temp_pose_stamp2;
-    temp_pose_stamp2.pose.position = temp_pose2.position;
-    temp_pose_stamp2.pose.orientation.x = 0;
-    temp_pose_stamp2.pose.orientation.y = 0;
-    temp_pose_stamp2.pose.orientation.z = 0;
-    temp_pose_stamp2.pose.orientation.w = 1;
-    temp_pose_stamp2.header.frame_id = "world_odom";
-    shared_data().rh_grasp_pose2 = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(temp_pose_stamp2));
-
-    std::cout << "=== POSITION 2: " << temp_pose_stamp2.pose.position.x << " " 
-				    << temp_pose_stamp2.pose.position.y << " " 
-				    << temp_pose_stamp2.pose.position.z << std::endl;
-					    
-    shared_data()._pub_obj_in_world2.publish (temp_pose_stamp2);
+//     temp_pose_stamp.pose.orientation.w = 1;
+//     temp_pose_stamp.header.frame_id = "world_odom";
+//     // need to cast the variable as the pointer --> reverse later!!!
+//     shared_data().rh_grasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(temp_pose_stamp));
+//      
+//     shared_data()._pub_obj_in_world.publish (temp_pose_stamp);
+//     
+// 
+//     // 2ND TRY
+//     tf::StampedTransform tf_world_to_cam;
+//     tf.getTransformTf_direct("world_odom", "multisense/left_camera_optical_frame", tf_world_to_cam);
+//     
+//     tf::Transform tf_world_to_obj;
+//     tf_world_to_obj = tf_world_to_cam * tf_cam_to_target;
+//     geometry_msgs::Pose temp_pose2;
+//     tf::poseTFToMsg(tf_world_to_obj, temp_pose2);
+//     geometry_msgs::PoseStamped temp_pose_stamp2;
+//     temp_pose_stamp2.pose.position = temp_pose2.position;
+//     temp_pose_stamp2.pose.orientation.x = 0;
+//     temp_pose_stamp2.pose.orientation.y = 0;
+//     temp_pose_stamp2.pose.orientation.z = 0;
+//     temp_pose_stamp2.pose.orientation.w = 1;
+//     temp_pose_stamp2.header.frame_id = "world_odom";
+//     shared_data().rh_grasp_pose2 = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(temp_pose_stamp2));
+// 
+//     std::cout << "=== POSITION 2: " << temp_pose_stamp2.pose.position.x << " " 
+// 				    << temp_pose_stamp2.pose.position.y << " " 
+// 				    << temp_pose_stamp2.pose.position.z << std::endl;
+// 					    
+//     shared_data()._pub_obj_in_world2.publish (temp_pose_stamp2);
     
     
 }
@@ -332,7 +333,8 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
   
     // get transformation from world to cam
     Eigen::Affine3d world_to_cam;
-    tf.getTransformTf("world_odom", "multisense/left_camera_optical_frame", world_to_cam);
+    //tf.getTransformTf("world_odom", "multisense/left_camera_optical_frame", world_to_cam);  // not work
+    tf.getTransformTf("multisense/left_camera_optical_frame", "world_odom", world_to_cam);
     //tf.getTransformTf("multisense/left_camera_optical_frame", "world_odom", world_to_cam);
     // get final world to object transform
     Eigen::Affine3d world_to_object;
@@ -351,6 +353,10 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
     temp_pose_stamp.pose.orientation.y = -0.5591931143131625;
     temp_pose_stamp.pose.orientation.z = 0;
     temp_pose_stamp.pose.orientation.w = 0.8290374303399975;
+//     temp_pose_stamp.pose.orientation.x = 0;
+//     temp_pose_stamp.pose.orientation.y = 0;
+//     temp_pose_stamp.pose.orientation.z = 0;
+//     temp_pose_stamp.pose.orientation.w = 1;
     temp_pose_stamp.header.frame_id = "world_odom";
     // need to cast the variable as the pointer --> reverse later!!!
     shared_data().rh_grasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(temp_pose_stamp));
@@ -359,59 +365,59 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
     
     
     
-//     // CALL trajectory_utils
-//     trajectory_utils::Cartesian end;
-//     //end.distal_frame = "LSoftHand";
-//     //end.frame = end_hand_pose_stamped;
-//     end.distal_frame = "RSoftHand";
-//     //end.frame = r_end_hand_pose_stamped;
-//     end.frame = *shared_data().rh_grasp_pose; // to test hardcode pose; rh_grasp_pose is a pointer --> need *
+    // CALL trajectory_utils
+    trajectory_utils::Cartesian end;
+    //end.distal_frame = "LSoftHand";
+    //end.frame = end_hand_pose_stamped;
+    end.distal_frame = "RSoftHand";
+    //end.frame = r_end_hand_pose_stamped;
+    end.frame = *shared_data().rh_grasp_pose; // to test hardcode pose; rh_grasp_pose is a pointer --> need *
+
+    // define the first segment
+    trajectory_utils::segment s1;
+    s1.type.data = 0;        // min jerk traj
+    s1.T.data = 5.0;        // traj duration 1 second      
+    s1.start = start_traj;   // start pose
+    s1.end = end;            // end pose 
+
+    
+//     start_traj.frame = end_hand_pose_stamped;
 // 
-//     // define the first segment
-//     trajectory_utils::segment s1;
-//     s1.type.data = 0;        // min jerk traj
-//     s1.T.data = 1.0;        // traj duration 1 second      
-//     s1.start = start_traj;   // start pose
-//     s1.end = end;            // end pose 
-// 
+//     end_hand_pose_stamped.pose.position.z =
+//     shared_data()._hose_grasp_pose->pose.position.z;
+//     end.frame = end_hand_pose_stamped;
 //     
-// //     start_traj.frame = end_hand_pose_stamped;
-// // 
-// //     end_hand_pose_stamped.pose.position.z =
-// //     shared_data()._hose_grasp_pose->pose.position.z;
-// //     end.frame = end_hand_pose_stamped;
-// //     
-// //     end_hand_pose_stamped.pose.position.z = 0.1;
-// //     end.frame = end_hand_pose_stamped;
-// 
-// //     // define the second segment
-// //     trajectory_utils::segment s2;
-// //     s2.type.data = 0;        // min jerk traj
-// //     s2.T.data = 10.0;        // traj duration 1 second      
-// //     s2.start = start_traj;   // start pose
-// //     s2.end = end;            // end pose 
-// 
-//     // only one segment in this example
-//     std::vector<trajectory_utils::segment> segments;
-//     segments.push_back (s1);
-//     //segments.push_back (s2);
-// 
-//     // prapere the advr_segment_control
-//     ADVR_ROS::advr_segment_control srv;
-//     srv.request.segment_trj.header.frame_id = shared_data ().frame_id_;
-//     srv.request.segment_trj.header.stamp = ros::Time::now();
-//     srv.request.segment_trj.segments = segments;
-// 
-//     // call the service
-//     shared_data()._client.call(srv);
-// 
-// //     // save last hand pose
-// //     shared_data()._last_lh_pose =
-// //     boost::shared_ptr<geometry_msgs::PoseStamped>
-// // 	(new geometry_msgs::PoseStamped (end_hand_pose_stamped));
-// //     shared_data()._last_rh_pose =
-// //     boost::shared_ptr<geometry_msgs::PoseStamped>
-// // 	(new geometry_msgs::PoseStamped (r_end_hand_pose_stamped));
+//     end_hand_pose_stamped.pose.position.z = 0.1;
+//     end.frame = end_hand_pose_stamped;
+
+//     // define the second segment
+//     trajectory_utils::segment s2;
+//     s2.type.data = 0;        // min jerk traj
+//     s2.T.data = 10.0;        // traj duration 1 second      
+//     s2.start = start_traj;   // start pose
+//     s2.end = end;            // end pose 
+
+    // only one segment in this example
+    std::vector<trajectory_utils::segment> segments;
+    segments.push_back (s1);
+    //segments.push_back (s2);
+
+    // prapere the advr_segment_control
+    ADVR_ROS::advr_segment_control srv;
+    srv.request.segment_trj.header.frame_id = shared_data ().frame_id_;
+    srv.request.segment_trj.header.stamp = ros::Time::now();
+    srv.request.segment_trj.segments = segments;
+
+    // call the service
+    shared_data()._client.call(srv);
+
+//     // save last hand pose
+//     shared_data()._last_lh_pose =
+//     boost::shared_ptr<geometry_msgs::PoseStamped>
+// 	(new geometry_msgs::PoseStamped (end_hand_pose_stamped));
+//     shared_data()._last_rh_pose =
+//     boost::shared_ptr<geometry_msgs::PoseStamped>
+// 	(new geometry_msgs::PoseStamped (r_end_hand_pose_stamped));
 	
     // Info msg
     //std::cout << "Send \"lh_move_fail\" or \"success\" msg..." << std::endl;
