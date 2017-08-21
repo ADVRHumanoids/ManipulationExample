@@ -69,6 +69,11 @@ namespace myfsm{
 */
     struct SharedData
     {
+	// ros stuff
+	std::shared_ptr<ros::NodeHandle> _nh;
+	ros::Publisher _pub_obj_in_world;
+	
+	
 	XBot::RobotInterface::Ptr _robot;
 
 	ros::ServiceClient _client;

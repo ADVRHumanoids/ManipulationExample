@@ -209,12 +209,13 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
     // get transformation from world to cam
     Eigen::Affine3d world_to_cam;
     tf.getTransformTf("world_odom", "multisense/left_camera_optical_frame", world_to_cam);
+    //tf.getTransformTf("multisense/left_camera_optical_frame", "world_odom", world_to_cam);
     // get final world to object transform
     Eigen::Affine3d world_to_object;
     world_to_object = world_to_cam * cam_to_object;
     // Transform from Eigen::Affine3d to geometry_msgs::Pose
     geometry_msgs::Pose rh_grasp_pose_final;
-    tf::poseEigenToMsg (world_to_object, rh_grasp_pose_final);
+    tf::poseEigenToMsg (world_to_object, rh_grasp_pose_final);      
     
     // keep the position only
     geometry_msgs::PoseStamped temp_pose_stamp;
@@ -226,10 +227,11 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
     temp_pose_stamp.pose.orientation.y = -0.5591931143131625;
     temp_pose_stamp.pose.orientation.z = 0;
     temp_pose_stamp.pose.orientation.w = 0.8290374303399975;
+    temp_pose_stamp.header.frame_id = "world_odom";
     // need to cast the variable as the pointer --> reverse later!!!
     shared_data().rh_grasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(temp_pose_stamp));
      
-    
+    shared_data()._pub_obj_in_world.publish (temp_pose_stamp);
     
     trajectory_utils::Cartesian end;
     //end.distal_frame = "LSoftHand";
