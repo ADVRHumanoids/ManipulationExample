@@ -72,6 +72,7 @@ namespace myfsm{
 	// ros stuff
 	std::shared_ptr<ros::NodeHandle> _nh;
 	ros::Publisher _pub_obj_in_world;
+	ros::Publisher _pub_obj_in_world2;
 	
 	
 	XBot::RobotInterface::Ptr _robot;
@@ -96,7 +97,7 @@ namespace myfsm{
 	//std::string frame_id_ = "multisense/left_camera_optical_frame";  // CHECK LATER
 	
 	// right hand grasp pose
-	geometry_msgs::PoseStamped::ConstPtr rh_grasp_pose;  // must use ConstPtr, not Ptr
+	geometry_msgs::PoseStamped::ConstPtr rh_grasp_pose, rh_grasp_pose2;  // must use ConstPtr, not Ptr
 	
 	// ID of ros topic - for right hand
 	std::string rh_grasp_pose_topic = "vs_pose_right_3D";
@@ -120,29 +121,51 @@ namespace myfsm{
 	{}
 
 	/** \brief TBD. */
-	bool
-	getTransformTf (const std::string& parent,
-			const std::string& child,
-			Eigen::Affine3d& world_T_bl)
+	
+	bool getTransformTf (const std::string& parent,
+			    const std::string& child,
+			    Eigen::Affine3d& world_T_bl)
 	{
-	try
-	{
-	    ros::Time now = ros::Time::now();
-	    //if(_listener.waitForTransform(child, parent, now, ros::Duration(5.0)))
-	    //{
-	    _listener.lookupTransform(child, parent,  ros::Time(0), _transform);
-	    tf::transformTFToMsg(_transform, _gm_transform);
-	    tf::transformMsgToEigen(_gm_transform, world_T_bl);
-	    return true;
-	    //}
-	    //else
-	    //  return false;
+	    try
+	    {
+		ros::Time now = ros::Time::now();
+		//if(_listener.waitForTransform(child, parent, now, ros::Duration(5.0)))
+		//{
+		_listener.lookupTransform(child, parent,  ros::Time(0), _transform);
+		tf::transformTFToMsg(_transform, _gm_transform);
+		tf::transformMsgToEigen(_gm_transform, world_T_bl);
+		return true;
+		//}
+		//else
+		//  return false;
+	    }
+	    catch (tf::TransformException ex)
+	    {
+		ROS_ERROR("%s",ex.what());
+		return false;
+	    }
 	}
-	catch (tf::TransformException ex)
+	
+	bool getTransformTf_direct (const std::string& parent,
+				    const std::string& child,
+				    tf::StampedTransform& _tf_transform_direct)
 	{
-	    ROS_ERROR("%s",ex.what());
-	    return false;
-	}
+	    try
+	    {
+		ros::Time now = ros::Time::now();
+		//if(_listener.waitForTransform(child, parent, now, ros::Duration(5.0)))
+		//{
+		_listener.lookupTransform(child, parent,  ros::Time(0), _tf_transform_direct);
+		return true;
+		//}
+		//else
+		//  return false;
+	    }
+	    catch (tf::TransformException ex)
+	    {
+		ROS_ERROR("%s",ex.what());
+		return false;
+	    }
 	}
 
     private:

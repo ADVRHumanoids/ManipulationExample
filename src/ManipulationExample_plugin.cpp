@@ -154,6 +154,7 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     fsm.shared_data().current_command = current_command;
     fsm.shared_data()._client = _nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");
     fsm.shared_data()._pub_obj_in_world = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("vs_obj_in_world", 1);
+    fsm.shared_data()._pub_obj_in_world2 = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("vs_obj_in_world2", 1);
     
     /*Saves robot as shared variable between states*/
     fsm.shared_data()._robot= robot;
