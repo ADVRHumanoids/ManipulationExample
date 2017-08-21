@@ -124,9 +124,7 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
 //     ros::topic::waitForMessage<geometry_msgs::PoseStamped>
 // 	(shared_data ().pose_cmd_);
 
-    //     // Wait for RH_Pose, i.e. the Hose Grasp Pose (hose_grasp_pose)
-    //shared_data ().rh_grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().rh_grasp_pose_topic);
-	
+    
 	
 
     // Move LH to LH_Pose (1 mid point in the z-axis fixed dist)
@@ -157,12 +155,9 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
     shared_data().sr_hand_pose = r_hand_pose;
     
     //// Get camera pose: will transform a point from camera_frame to world frame ???
-    shared_data()._robot->model().getPose("multisense/left_camera_optical_frame", camera_to_world);
+    //shared_data()._robot->model().getPose("multisense/left_camera_optical_frame", camera_to_world);
     
-//     // convert object pose to tf
-//     tf::Transform cam_to_target;
-//     tf::poseMsgToTF(shared_data ().rh_grasp_pose->pose, cam_to_target);
-    
+
 
     // Transform from Eigen::Affine3d to geometry_msgs::Pose
     //tf::poseEigenToMsg (hand_pose, start_hand_pose);
@@ -183,30 +178,57 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
     
     
 
-    // define the end frame
-    //geometry_msgs::PoseStamped end_hand_pose_stamped;
-    //end_hand_pose_stamped.pose = start_hand_pose;
-
-    geometry_msgs::PoseStamped r_end_hand_pose_stamped;
-
-    r_end_hand_pose_stamped.pose.position.x = 0.619;
-    r_end_hand_pose_stamped.pose.position.y = -0.29;
-    r_end_hand_pose_stamped.pose.position.z = 0.873;
-    r_end_hand_pose_stamped.pose.orientation.x = 0;
-    r_end_hand_pose_stamped.pose.orientation.y = -0.5591931143131625;
-    r_end_hand_pose_stamped.pose.orientation.z = 0;
-    r_end_hand_pose_stamped.pose.orientation.w = 0.8290374303399975;
-    shared_data().rh_grasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(r_end_hand_pose_stamped));
-    
-
-    //r_end_hand_pose_stamped.pose = shared_data().rh_grasp_pose->pose;    
-//     r_end_hand_pose_stamped.pose.position = shared_data().rh_grasp_pose->pose.position;    
+//     //// define the end frame - HARD CODE
+//     geometry_msgs::PoseStamped r_end_hand_pose_stamped;
+//     r_end_hand_pose_stamped.pose.position.x = 0.619;  // position and orientation are in world frame
+//     r_end_hand_pose_stamped.pose.position.y = -0.29;
+//     r_end_hand_pose_stamped.pose.position.z = 0.873;
 //     r_end_hand_pose_stamped.pose.orientation.x = 0;
-//     r_end_hand_pose_stamped.pose.orientation.y = 0;
+//     r_end_hand_pose_stamped.pose.orientation.y = -0.5591931143131625;
 //     r_end_hand_pose_stamped.pose.orientation.z = 0;
-//     r_end_hand_pose_stamped.pose.orientation.w = 1; // No rotation
+//     r_end_hand_pose_stamped.pose.orientation.w = 0.8290374303399975;
+//     // need to cast the variable as the pointer --> reverse later!!!
+//     shared_data().rh_grasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(r_end_hand_pose_stamped));
     
+    //// define the end frame - from vision module
+    // wait for vision message
+    shared_data ().rh_grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().rh_grasp_pose_topic);
     
+    // convert object pose message to eigen
+    tf::Transform tf_cam_to_target;
+    geometry_msgs::Pose temp_pose;
+    temp_pose.position = shared_data().rh_grasp_pose->pose.position;
+    temp_pose.orientation = shared_data().rh_grasp_pose->pose.orientation;
+    tf::poseMsgToTF(temp_pose, tf_cam_to_target);
+    geometry_msgs::Transform gt_cam_to_target;
+    tf::transformTFToMsg(tf_cam_to_target, gt_cam_to_target);
+    Eigen::Affine3d cam_to_object;
+    tf::transformMsgToEigen(gt_cam_to_target, cam_to_object);
+    
+  
+    // get transformation from world to cam
+    Eigen::Affine3d world_to_cam;
+    tf.getTransformTf("world_odom", "multisense/left_camera_optical_frame", world_to_cam);
+    // get final world to object transform
+    Eigen::Affine3d world_to_object;
+    world_to_object = world_to_cam * cam_to_object;
+    // Transform from Eigen::Affine3d to geometry_msgs::Pose
+    geometry_msgs::Pose rh_grasp_pose_final;
+    tf::poseEigenToMsg (world_to_object, rh_grasp_pose_final);
+    
+    // keep the position only
+    geometry_msgs::PoseStamped temp_pose_stamp;
+    temp_pose_stamp.pose.position = rh_grasp_pose_final.position;
+    std::cout << "--- FINAL OBJ POSITION: " << temp_pose_stamp.pose.position.x << " " 
+					    << temp_pose_stamp.pose.position.y << " " 
+					    << temp_pose_stamp.pose.position.z << std::endl;
+    temp_pose_stamp.pose.orientation.x = 0;
+    temp_pose_stamp.pose.orientation.y = -0.5591931143131625;
+    temp_pose_stamp.pose.orientation.z = 0;
+    temp_pose_stamp.pose.orientation.w = 0.8290374303399975;
+    // need to cast the variable as the pointer --> reverse later!!!
+    shared_data().rh_grasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(temp_pose_stamp));
+     
     
     
     trajectory_utils::Cartesian end;
@@ -214,7 +236,7 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
     //end.frame = end_hand_pose_stamped;
     end.distal_frame = "RSoftHand";
     //end.frame = r_end_hand_pose_stamped;
-    end.frame = *shared_data().rh_grasp_pose; // rh_grasp_pose is a pointer --> need *
+    end.frame = *shared_data().rh_grasp_pose; // to test hardcode pose; rh_grasp_pose is a pointer --> need *
 
     // define the first segment
     trajectory_utils::segment s1;
