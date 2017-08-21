@@ -88,8 +88,18 @@ namespace myfsm{
 	
 	// Working frame id
 	std::string frame_id_ = "world_odom";
+	//std::string frame_id_ = "multisense/left_camera_optical_frame";  // CHECK LATER
 	
-	// Vision data - copy from ManipulationExample object
+	// right hand grasp pose
+	geometry_msgs::PoseStamped::ConstPtr rh_grasp_pose;  // must use ConstPtr, not Ptr
+	
+	// ID of ros topic - for right hand
+	std::string rh_grasp_pose_topic = "vs_pose_right_3D";
+	
+	
+	
+	
+	// Vision data - copy from ManipulationExample object - not work
 	pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud_ptr;  // keep point clouds
 	std::string vision_string;
 	

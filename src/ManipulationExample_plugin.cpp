@@ -412,14 +412,11 @@ void ManipulationExample::point_right_callback(const geometry_msgs::Point::Const
 	grasp_pose_right.pose.position.y = point_temp.y;
 	grasp_pose_right.pose.position.z = point_temp.z;
 	grasp_pose_right.pose.orientation.x = 0;
-	grasp_pose_right.pose.orientation.y = 0.1;
+	grasp_pose_right.pose.orientation.y = 0;
 	grasp_pose_right.pose.orientation.z = 0;
-	grasp_pose_right.pose.orientation.w = 1;
+	grasp_pose_right.pose.orientation.w = 1;  // Identity - no rotation
 	
-	pub_pose_right_3D.publish(grasp_pose_right); //publish ok
-	 
-	
-	
+	pub_pose_right_3D.publish(grasp_pose_right); //publish ok	
     }
 }
 
