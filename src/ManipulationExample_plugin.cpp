@@ -139,9 +139,9 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     //sub_point_cloud = (*_nh).subscribe("/multisense/organized_image_points2", 1, &ManipulationExample::pointcloud_callback, this); // Real camera
     sub_point_cloud = (*_nh).subscribe("/multisense/points2", 1, &ManipulationExample::pointcloud_callback, this); // In simulation
     sub_vision_data = (*_nh).subscribe("vision_data", 1, &ManipulationExample::vision_data_callback, this);  // get data from vision module
-    sub_point_right = (*_nh).subscribe("vs_point_right_2D", 1, &ManipulationExample::point_right_callback, this); 
+    sub_rh_grasp_topic_2D = (*_nh).subscribe("vs_rh_grasp_topic_2D", 1, &ManipulationExample::point_right_callback, this); 
     
-    pub_pose_right_3D = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_pose_right_3D", 1);
+    pub_pose_right_3D = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_grasp_topic_3D", 1);
     
 //     // FSM vision
 //     fsm.shared_data().point_cloud_ptr = point_cloud_ptr;
@@ -153,8 +153,8 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     fsm.shared_data().command = command;
     fsm.shared_data().current_command = current_command;
     fsm.shared_data()._client = _nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");
-    fsm.shared_data()._pub_obj_in_world = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("vs_obj_in_world", 1);
-    fsm.shared_data()._pub_obj_in_world2 = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("vs_obj_in_world2", 1);
+    fsm.shared_data()._pub_rh_grasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("vs_rh_grasp_pose", 1);
+    fsm.shared_data()._pub_rh_pregrasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("vs_rh_pregrasp_pose", 1);
     
     /*Saves robot as shared variable between states*/
     fsm.shared_data()._robot= robot;

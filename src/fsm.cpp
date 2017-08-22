@@ -18,31 +18,35 @@ void myfsm::Home::entry (const XBot::FSM::Message& msg)
 
 void myfsm::Home::run (double time, double period)
 {
-    std::cout << "State: Home run" << std::endl;
-    
-    std::string message_string = shared_data().vision_string;
-    std::cout << "--- Got message: in Home run: " << message_string << std::endl;
+    std::cout << "========================================================================" << std::endl;
+    std::cout << "State: HOME RUN" << std::endl;
+    std::cout << "Current hand: " << shared_data().current_hand << std::endl;
+    std::cout << "Current grasp strategy: " << shared_data().current_grasp_strategy << std::endl;
+    std::cout << "You can change hand (rh or lh) or grasp stragegy (topgrasp or sidegrasp)" << std::endl;
     
     // blocking reading: wait for a command
-    //if(!shared_data().command.read(shared_data().current_command))
-    //  std::cout << shared_data().current_command.str() << std::endl;
-
-//     // Wait for RH_Pose, i.e. the Hose Grasp Pose (hose_grasp_pose)
-//     shared_data()._hose_grasp_pose =
-//     ros::topic::waitForMessage<geometry_msgs::PoseStamped>("hose_grasp_pose");
-// 
-//     // Debug msg
-//     std::cout << "Got pose message: " << std::endl;
-//     std::cout << shared_data()._hose_grasp_pose->pose.position.x << std::endl;
-
-        // blocking reading: wait for a command
     if(shared_data().command.read(shared_data().current_command))
     {
-	std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+	std::string str_cmd = shared_data().current_command.str();
+	std::cout << "Received command: " << str_cmd << std::endl;
+	if (str_cmd.compare(shared_data().rh_id) == 0)
+	{
+	    shared_data().current_hand = shared_data().rh_id;
+	    std::cout << "Updated current hand to: " << shared_data().current_hand;
+	}
+	
+	if (str_cmd.compare(shared_data().lh_id) == 0)
+	{
+	    shared_data().current_hand = shared_data().lh_id;
+	    std::cout << "Updated current hand to: " << shared_data().current_hand;
+	}
 
+	// TODO: update grasp strategy
+	
 	// RH Move failed
 	if (!shared_data().current_command.str().compare("done"))
-	    transit("Idle");
+	    //transit("Idle");
+	    transit("Reach");
     }
     
     
@@ -54,6 +58,42 @@ void myfsm::Home::exit ()
 }
 //End Home State
 
+
+
+
+
+
+void myfsm::Reach::entry(const XBot::FSM::Message& msg)
+{
+
+}
+
+void myfsm::Reach::run(double time, double period)
+{
+    std::cout << "State: REACH RUN" << std::endl;
+
+ // blocking reading: wait for a command
+    if(shared_data().command.read(shared_data().current_command))
+    {
+	std::string str_cmd = shared_data().current_command.str();
+	std::cout << "Received command: " << str_cmd << std::endl;
+	
+	// TBD
+	if (!shared_data().current_command.str().compare("XXX"))
+	    //transit("Idle");
+	    transit("YYY");
+    }
+}
+
+void myfsm::Reach::react (const XBot::FSM::Event& e)
+{
+
+}
+
+void myfsm::Reach::exit ()
+{
+
+}
 
 
 //Begin Idle State
@@ -317,7 +357,7 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
     
     //// define the end frame - from vision module
     // wait for vision message
-    shared_data ().rh_grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().rh_grasp_pose_topic);
+    shared_data ().rh_grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().rh_grasp_topic);
     
     // convert object pose message to eigen
     tf::Transform tf_cam_to_target;
@@ -361,7 +401,7 @@ void myfsm::Move_RH::entry (const XBot::FSM::Message& msg)
     // need to cast the variable as the pointer --> reverse later!!!
     shared_data().rh_grasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(temp_pose_stamp));
      
-    shared_data()._pub_obj_in_world.publish (temp_pose_stamp);
+    shared_data()._pub_rh_grasp_pose.publish (temp_pose_stamp);
     
     
     

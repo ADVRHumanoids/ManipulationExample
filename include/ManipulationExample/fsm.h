@@ -71,8 +71,8 @@ namespace myfsm{
     {
 	// ros stuff
 	std::shared_ptr<ros::NodeHandle> _nh;
-	ros::Publisher _pub_obj_in_world;
-	ros::Publisher _pub_obj_in_world2;
+	ros::Publisher _pub_rh_grasp_pose;    // publisher for right hand final grasp pose
+	ros::Publisher _pub_rh_pregrasp_pose; // publisher for right hand pregrasp pose
 	
 	
 	XBot::RobotInterface::Ptr _robot;
@@ -90,24 +90,25 @@ namespace myfsm{
 	Eigen::Affine3d sl_hand_pose, sr_hand_pose;
 	
 	// Command string for reading poses
-	std::string pose_cmd_ = "hose_pose";
+	//std::string pose_cmd_ = "hose_pose";
 	
 	// Working frame id
 	std::string frame_id_ = "world_odom";
-	//std::string frame_id_ = "multisense/left_camera_optical_frame";  // CHECK LATER
 	
 	// right hand grasp pose
-	geometry_msgs::PoseStamped::ConstPtr rh_grasp_pose, rh_grasp_pose2;  // must use ConstPtr, not Ptr
+	geometry_msgs::PoseStamped::ConstPtr rh_grasp_pose, rh_pregrasp_pose;  // must use ConstPtr, not Ptr
 	
 	// ID of ros topic - for right hand
-	std::string rh_grasp_pose_topic = "vs_pose_right_3D";
+	std::string rh_grasp_topic = "vs_rh_grasp_topic_3D";
 	
+	const std::string rh_id = "rh"; // id for choosing right hand
+	const std::string lh_id = "lh";
+	const std::string side_grasp = "sidegrasp"; // grasping type: sidegrasp --> move hand parallel to homing pose
+	const std::string top_grasp = "topgrasp";    // grasping type: topgrasp --> grasp from top to bottom
 	
+	std::string current_hand = rh_id;  // current hand in use - default is right hand
+	std::string current_grasp_strategy = side_grasp; // current grasp strategy - default is side grasp
 	
-	
-	// Vision data - copy from ManipulationExample object - not work
-	pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud_ptr;  // keep point clouds
-	std::string vision_string;
 	
 	
     };
@@ -190,82 +191,98 @@ namespace myfsm{
     
     class Home : public MacroState
     {
-      virtual std::string get_name() const { return "Home"; }
+	virtual std::string get_name() const { return "Home"; }
 
-      virtual void run(double time, double period);
+	virtual void run(double time, double period);
 
-      virtual void entry(const XBot::FSM::Message& msg);
+	virtual void entry(const XBot::FSM::Message& msg);
 
-      virtual void react(const XBot::FSM::Event& e);
+	virtual void react(const XBot::FSM::Event& e);
 
-      virtual void exit ();
+	virtual void exit ();
 
-      private:
+	private:
+        
+    };
+     
+    class Reach : public MacroState
+    {
+	virtual std::string get_name() const { return "Reach"; }
+
+	virtual void run(double time, double period);
+
+	virtual void entry(const XBot::FSM::Message& msg);
+
+	virtual void react(const XBot::FSM::Event& e);
+
+	virtual void exit ();
+
+	private:
         
      };
      
     class Idle : public MacroState
     {
-      virtual std::string get_name() const { return "Idle"; }
+	virtual std::string get_name() const { return "Idle"; }
 
-      virtual void run(double time, double period);
+	virtual void run(double time, double period);
 
-      virtual void entry(const XBot::FSM::Message& msg);
+	virtual void entry(const XBot::FSM::Message& msg);
 
-      virtual void react(const XBot::FSM::Event& e);
+	virtual void react(const XBot::FSM::Event& e);
 
-      virtual void exit ();
+	virtual void exit ();
 
-      private:
+	private:
         
      };
      
  
     class Move_RH : public MacroState
     {
-      virtual std::string get_name() const { return "Move_RH"; }
+	virtual std::string get_name() const { return "Move_RH"; }
 
-      virtual void run(double time, double period);
+	virtual void run(double time, double period);
 
-      virtual void entry(const XBot::FSM::Message& msg);
+	virtual void entry(const XBot::FSM::Message& msg);
 
-      virtual void react(const XBot::FSM::Event& e);
+	virtual void react(const XBot::FSM::Event& e);
 
-      virtual void exit ();
+	virtual void exit ();
 
-      private:
+	private:
         
      };
  
     class Grasp_RH : public MacroState
     {
-      virtual std::string get_name() const { return "Grasp_RH"; }
+	virtual std::string get_name() const { return "Grasp_RH"; }
 
-      virtual void run(double time, double period);
+	virtual void run(double time, double period);
 
-      virtual void entry(const XBot::FSM::Message& msg);
+	virtual void entry(const XBot::FSM::Message& msg);
 
-      virtual void react(const XBot::FSM::Event& e);
+	virtual void react(const XBot::FSM::Event& e);
 
-      virtual void exit ();
+	virtual void exit ();
 
-      private:
+	private:
 
      };
  
     class Grasp_RH_Done : public MacroState
     {
-      virtual std::string get_name() const { return "Grasp_RH_Done"; }
+	virtual std::string get_name() const { return "Grasp_RH_Done"; }
 
-      virtual void run(double time, double period);
+	virtual void run(double time, double period);
 
-      virtual void entry(const XBot::FSM::Message& msg);
+	virtual void entry(const XBot::FSM::Message& msg);
 
-      virtual void react(const XBot::FSM::Event& e);
+	virtual void react(const XBot::FSM::Event& e);
 
-      virtual void exit ();
+	virtual void exit ();
 
-      private:
+	private:
         
      };
  

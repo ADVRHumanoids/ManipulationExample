@@ -115,7 +115,7 @@ namespace XBotPlugin
 	ros::Subscriber sub_camera_info;
 	ros::Subscriber sub_point_cloud;
 	ros::Subscriber sub_vision_data; // Subscribe to message from vision module (as string)
-	ros::Subscriber sub_point_right; // SUbscribe to vs_point_right_2D topic
+	ros::Subscriber sub_rh_grasp_topic_2D; // SUbscribe to vs_point_right_2D topic
 	
 	ros::Publisher  pub_pose_right_3D; // Publish vision data (in 3D pose) to FSM
 	
