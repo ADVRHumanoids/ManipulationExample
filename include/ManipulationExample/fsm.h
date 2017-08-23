@@ -71,11 +71,11 @@ namespace myfsm{
     {
 	// ros stuff
 	std::shared_ptr<ros::NodeHandle> _nh;
-	ros::Publisher _pub_rh_grasp_pose;    // publisher for right hand final grasp pose
-	ros::Publisher _pub_rh_pregrasp_pose; // publisher for right hand pregrasp pose
+	ros::Publisher _pub_rb_rh_grasp_pose;    // publisher for right hand final grasp pose - in world frame (rb - robot)
+	ros::Publisher _pub_rb_rh_pregrasp_pose; // publisher for right hand pregrasp pose
 	
-	ros::Publisher _pub_lh_grasp_pose;
-	ros::Publisher _pub_lh_pregrasp_pose;
+	ros::Publisher _pub_rb_lh_grasp_pose;
+	ros::Publisher _pub_rb_lh_pregrasp_pose;
 	
 	XBot::RobotInterface::Ptr _robot;
 
@@ -102,8 +102,8 @@ namespace myfsm{
 	geometry_msgs::PoseStamped::ConstPtr grasp_pose, pregrasp_pose;  // must use ConstPtr, not Ptr
 	
 	// ros topic for 3D pose of objects (in camera frame) - for right hand, left hand
-	const std::string vs_rh_grasp_topic_3D = "vs_rh_obj_pose_3D";  // MUST BE THE SAME IN: pub_rh_obj_pose_3D = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_obj_pose_3D", 1);
-	const std::string vs_lh_grasp_topic_3D = "vs_lh_obj_pose_3D";
+	const std::string vs_rh_obj_pose_3D = "vs_rh_obj_pose_3D";  // MUST BE THE SAME IN: pub_rh_obj_pose_3D = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_obj_pose_3D", 1);
+	const std::string vs_lh_obj_pose_3D = "vs_lh_obj_pose_3D";
 	
 	const std::string rh_id = "rh"; // id for choosing right hand
 	const std::string lh_id = "lh";

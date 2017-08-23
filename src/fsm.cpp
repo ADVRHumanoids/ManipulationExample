@@ -112,6 +112,12 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg)
     geo_posestamped_start_hand_pose.pose = geo_pose_start_hand_pose;
 
     
+    // Create the Cartesian trajectories
+    trajectory_utils::Cartesian start_traj;
+    //start_traj.distal_frame = "LSoftHand";
+    //start_traj.frame = start_hand_pose_stamped;
+    start_traj.distal_frame = "RSoftHand";
+    start_traj.frame = geo_posestamped_start_hand_pose;
     
 
    
@@ -131,11 +137,11 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg)
     // wait for vision message
     if (shared_data().current_hand == shared_data().rh_id)
     {
-	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_rh_grasp_topic_3D);
+	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_rh_obj_pose_3D);
 	std::cout << "GOT MESSAGE FROM vs_rh_grasp_topic_3D" << std::endl;
     }
     else
-	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_lh_grasp_topic_3D);
+	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_lh_obj_pose_3D);
     
     // convert object pose_stamped --> pose --> eigen
     tf::Transform tf_cam_to_obj;
@@ -181,27 +187,73 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg)
     // need to cast the variable as the pointer --> reverse later!!!
     shared_data().grasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_end_grasp_pose));
      
+    // publish obj pose message in world frame
     if (shared_data().current_hand == shared_data().rh_id)
-	shared_data()._pub_rh_grasp_pose.publish(geo_posestamped_end_grasp_pose);
+	shared_data()._pub_rb_rh_grasp_pose.publish(geo_posestamped_end_grasp_pose);
     else
-	shared_data()._pub_lh_grasp_pose.publish(geo_posestamped_end_grasp_pose);
+	shared_data()._pub_rb_lh_grasp_pose.publish(geo_posestamped_end_grasp_pose);
     
     
-    // Create the Cartesian trajectories, set starting frame
-    trajectory_utils::Cartesian start_traj;
-    if (shared_data().current_hand == shared_data().rh_id)
-	start_traj.distal_frame = "RSoftHand";
-    else
-	start_traj.distal_frame = "LSoftHand";
-    start_traj.frame = geo_posestamped_start_hand_pose; // must be gsg pose stamped?
+//     // Create the Cartesian trajectories, set starting frame
+//     trajectory_utils::Cartesian start_traj;
+//     if (shared_data().current_hand == shared_data().rh_id)
+// 	start_traj.distal_frame = "RSoftHand";
+//     else
+// 	start_traj.distal_frame = "LSoftHand";
+//     start_traj.frame = geo_posestamped_start_hand_pose; // must be gsg pose stamped?
     
         
+//     // CALL trajectory_utils
+//     trajectory_utils::Cartesian end;
+//     //if (shared_data().current_hand == shared_data().rh_id)
+// 	end.distal_frame = "RSoftHand";
+//     //else
+// 	//end.distal_frame = "LSoftHand";
+//     end.frame = *shared_data().grasp_pose; // to test hardcode pose; rh_grasp_pose is a pointer --> need *
+// 
+//     // define the first segment
+//     trajectory_utils::segment s1;
+//     s1.type.data = 0;        // min jerk traj
+//     s1.T.data = 5.0;        // traj duration 1 second      
+//     s1.start = start_traj;   // start pose
+//     s1.end = end;            // end pose 
+// 
+//     
+// //     start_traj.frame = end_hand_pose_stamped;
+// // 
+// //     end_hand_pose_stamped.pose.position.z =
+// //     shared_data()._hose_grasp_pose->pose.position.z;
+// //     end.frame = end_hand_pose_stamped;
+// //     
+// //     end_hand_pose_stamped.pose.position.z = 0.1;
+// //     end.frame = end_hand_pose_stamped;
+// 
+// //     // define the second segment
+// //     trajectory_utils::segment s2;
+// //     s2.type.data = 0;        // min jerk traj
+// //     s2.T.data = 10.0;        // traj duration 1 second      
+// //     s2.start = start_traj;   // start pose
+// //     s2.end = end;            // end pose 
+// 
+//     // only one segment in this example
+//     std::vector<trajectory_utils::segment> segments;
+//     segments.push_back (s1);
+//     //segments.push_back (s2);
+// 
+//     // prapere the advr_segment_control
+//     ADVR_ROS::advr_segment_control srv;
+//     srv.request.segment_trj.header.frame_id = shared_data ().world_frame;
+//     srv.request.segment_trj.header.stamp = ros::Time::now();
+//     srv.request.segment_trj.segments = segments;
+// 
+//     // call the service
+//     shared_data()._client.call(srv);
+
+    
     // CALL trajectory_utils
     trajectory_utils::Cartesian end;
-    if (shared_data().current_hand == shared_data().rh_id)
-	end.distal_frame = "RSoftHand";
-    else
-	end.distal_frame = "LSoftHand";
+    end.distal_frame = "RSoftHand";
+    //end.frame = r_end_hand_pose_stamped;
     end.frame = *shared_data().grasp_pose; // to test hardcode pose; rh_grasp_pose is a pointer --> need *
 
     // define the first segment
@@ -210,23 +262,6 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg)
     s1.T.data = 5.0;        // traj duration 1 second      
     s1.start = start_traj;   // start pose
     s1.end = end;            // end pose 
-
-    
-//     start_traj.frame = end_hand_pose_stamped;
-// 
-//     end_hand_pose_stamped.pose.position.z =
-//     shared_data()._hose_grasp_pose->pose.position.z;
-//     end.frame = end_hand_pose_stamped;
-//     
-//     end_hand_pose_stamped.pose.position.z = 0.1;
-//     end.frame = end_hand_pose_stamped;
-
-//     // define the second segment
-//     trajectory_utils::segment s2;
-//     s2.type.data = 0;        // min jerk traj
-//     s2.T.data = 10.0;        // traj duration 1 second      
-//     s2.start = start_traj;   // start pose
-//     s2.end = end;            // end pose 
 
     // only one segment in this example
     std::vector<trajectory_utils::segment> segments;
@@ -242,6 +277,7 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg)
     // call the service
     shared_data()._client.call(srv);
 
+    
    
 }
 
