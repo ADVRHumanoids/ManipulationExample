@@ -363,10 +363,9 @@ void ManipulationExample::point_right_callback_FAKE(const geometry_msgs::Point::
     point_right.y = msg->y;
     point_right.z = msg->z;
     
-    std::cout << "Got FAKE 2D point: " << point_right.x << " " << point_right.y << " " << point_right.z << std::endl;
+    //std::cout << "Got FAKE 2D point: " << point_right.x << " " << point_right.y << " " << point_right.z << std::endl;
     
-    // Publish FAKE POINT
-        // Publish fake data - debug
+    // Publish fake data - debug
     geometry_msgs::PoseStamped fake_pose;
     fake_pose.header.frame_id = "multisense/left_camera_optical_frame"; // publish in camera frame
     fake_pose.pose.position.x = 0.38;
