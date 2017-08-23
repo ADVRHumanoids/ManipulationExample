@@ -74,6 +74,8 @@ namespace myfsm{
 	ros::Publisher _pub_rh_grasp_pose;    // publisher for right hand final grasp pose
 	ros::Publisher _pub_rh_pregrasp_pose; // publisher for right hand pregrasp pose
 	
+	ros::Publisher _pub_lh_grasp_pose;
+	ros::Publisher _pub_lh_pregrasp_pose;
 	
 	XBot::RobotInterface::Ptr _robot;
 
@@ -86,20 +88,22 @@ namespace myfsm{
 
 	Eigen::VectorXd _q0;
       
-	// Starting left and right hand poses
-	Eigen::Affine3d sl_hand_pose, sr_hand_pose;
+	
+	Eigen::Affine3d start_hand_pose; // keep starting pose of left hand or right hand
 	
 	// Command string for reading poses
 	//std::string pose_cmd_ = "hose_pose";
 	
-	// Working frame id
-	std::string frame_id_ = "world_odom";
+	// Working frames
+	const std::string world_frame = "world_odom";
+	const std::string left_camera_frame = "multisense/left_camera_optical_frame";
 	
-	// right hand grasp pose
-	geometry_msgs::PoseStamped::ConstPtr rh_grasp_pose, rh_pregrasp_pose;  // must use ConstPtr, not Ptr
+	// grasp pose
+	geometry_msgs::PoseStamped::ConstPtr grasp_pose, pregrasp_pose;  // must use ConstPtr, not Ptr
 	
-	// ID of ros topic - for right hand
-	std::string rh_grasp_topic = "vs_rh_grasp_topic_3D";
+	// ID of ros topic - for right hand, left hand
+	const std::string vs_rh_grasp_topic_3D = "vs_rh_grasp_topic_3D";
+	const std::string vs_lh_grasp_topic_3D = "vs_lh_grasp_topic_3D";
 	
 	const std::string rh_id = "rh"; // id for choosing right hand
 	const std::string lh_id = "lh";

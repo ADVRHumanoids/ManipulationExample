@@ -139,9 +139,9 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     //sub_point_cloud = (*_nh).subscribe("/multisense/organized_image_points2", 1, &ManipulationExample::pointcloud_callback, this); // Real camera
     sub_point_cloud = (*_nh).subscribe("/multisense/points2", 1, &ManipulationExample::pointcloud_callback, this); // In simulation
     sub_vision_data = (*_nh).subscribe("vision_data", 1, &ManipulationExample::vision_data_callback, this);  // get data from vision module
-    sub_rh_grasp_topic_2D = (*_nh).subscribe("vs_rh_grasp_topic_2D", 1, &ManipulationExample::point_right_callback, this); 
+    sub_rh_obj_pose_2D = (*_nh).subscribe("vs_rh_obj_pose_2D", 1, &ManipulationExample::point_right_callback, this); 
     
-    pub_pose_right_3D = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_grasp_topic_3D", 1);
+    pub_rh_obj_pose_3D = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_obj_pose_3D", 1);
     
 //     // FSM vision
 //     fsm.shared_data().point_cloud_ptr = point_cloud_ptr;
@@ -153,14 +153,20 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     fsm.shared_data().command = command;
     fsm.shared_data().current_command = current_command;
     fsm.shared_data()._client = _nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");
-    fsm.shared_data()._pub_rh_grasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("vs_rh_grasp_pose", 1);
-    fsm.shared_data()._pub_rh_pregrasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("vs_rh_pregrasp_pose", 1);
+    
+    fsm.shared_data()._pub_rh_grasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_rh_grasp_pose", 1);
+    fsm.shared_data()._pub_lh_grasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_lh_grasp_pose", 1);
+    
+    fsm.shared_data()._pub_rh_pregrasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_rh_pregrasp_pose", 1);
+    fsm.shared_data()._pub_lh_pregrasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_lh_pregrasp_pose", 1);
+    
     
     /*Saves robot as shared variable between states*/
     fsm.shared_data()._robot= robot;
     
     /*Registers states*/
     fsm.register_state(std::make_shared<myfsm::Home>());
+    fsm.register_state(std::make_shared<myfsm::Reach>());
     fsm.register_state(std::make_shared<myfsm::Idle>());
     fsm.register_state(std::make_shared<myfsm::Move_RH>());
     fsm.register_state(std::make_shared<myfsm::Grasp_RH>());
@@ -419,7 +425,7 @@ void ManipulationExample::point_right_callback(const geometry_msgs::Point::Const
 	grasp_pose_right.pose.orientation.z = 0;
 	grasp_pose_right.pose.orientation.w = 1;  // Identity - no rotation
 	
-	pub_pose_right_3D.publish(grasp_pose_right); //publish ok	
+	pub_rh_obj_pose_3D.publish(grasp_pose_right); //publish ok	
     }
 }
 
