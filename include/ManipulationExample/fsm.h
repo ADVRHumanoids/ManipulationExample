@@ -101,9 +101,9 @@ namespace myfsm{
 	// grasp pose
 	geometry_msgs::PoseStamped::ConstPtr grasp_pose, pregrasp_pose;  // must use ConstPtr, not Ptr
 	
-	// ID of ros topic - for right hand, left hand
-	const std::string vs_rh_grasp_topic_3D = "vs_rh_grasp_topic_3D";
-	const std::string vs_lh_grasp_topic_3D = "vs_lh_grasp_topic_3D";
+	// ros topic for 3D pose of objects (in camera frame) - for right hand, left hand
+	const std::string vs_rh_grasp_topic_3D = "vs_rh_obj_pose_3D";  // MUST BE THE SAME IN: pub_rh_obj_pose_3D = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_obj_pose_3D", 1);
+	const std::string vs_lh_grasp_topic_3D = "vs_lh_obj_pose_3D";
 	
 	const std::string rh_id = "rh"; // id for choosing right hand
 	const std::string lh_id = "lh";
@@ -113,7 +113,7 @@ namespace myfsm{
 	std::string current_hand = rh_id;  // current hand in use - default is right hand
 	std::string current_grasp_strategy = side_grasp; // current grasp strategy - default is side grasp
 	
-	
+	bool verbose_print = true;
 	
     };
     

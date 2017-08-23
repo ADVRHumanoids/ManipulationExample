@@ -79,158 +79,168 @@ void myfsm::Home::exit ()
 
 void myfsm::Reach::entry(const XBot::FSM::Message& msg)
 {
-    std::cout << "State: REACH ENTRY" << std::endl;
-//     // Update robot model
-//     shared_data()._robot->sense();
-//     Eigen::Affine3d world_T_bl;
-//     std::string fb;
-//     shared_data()._robot->model().getFloatingBaseLink(fb);
-//     tf.getTransformTf(fb, shared_data ().world_frame, world_T_bl);
-//     shared_data()._robot->model().setFloatingBasePose(world_T_bl);
-//     shared_data()._robot->model().update();
-// 
-//     
-//     // Get starting hand pose
-//     if (shared_data().current_hand == shared_data().rh_id)
-// 	shared_data()._robot->model().getPose("RSoftHand", shared_data().start_hand_pose);
-//     else
-// 	shared_data()._robot->model().getPose("LSoftHand", shared_data().start_hand_pose);
-//     
-//     // Convert start hand pose (eigen) to geometry msg (pose)
-//     geometry_msgs::Pose geo_pose_start_hand_pose;
-//     tf::poseEigenToMsg (shared_data().start_hand_pose, geo_pose_start_hand_pose);
-//     
-//     // Convert geometry msg (pose) to geometry msg (pose stamped)
-//     geometry_msgs::PoseStamped geo_posestamped_start_hand_pose;
-//     geo_posestamped_start_hand_pose.pose = geo_pose_start_hand_pose;
-// 
-//     
-//     
-// 
-//    
-// //     //// define the end frame - HARD CODE
-// //     geometry_msgs::PoseStamped r_end_hand_pose_stamped;
-// //     r_end_hand_pose_stamped.pose.position.x = 0.619;  // position and orientation are in world frame
-// //     r_end_hand_pose_stamped.pose.position.y = -0.29;
-// //     r_end_hand_pose_stamped.pose.position.z = 0.873;
-// //     r_end_hand_pose_stamped.pose.orientation.x = 0;
-// //     r_end_hand_pose_stamped.pose.orientation.y = -0.5591931143131625;
-// //     r_end_hand_pose_stamped.pose.orientation.z = 0;
-// //     r_end_hand_pose_stamped.pose.orientation.w = 0.8290374303399975;
-// //     // need to cast the variable as the pointer --> reverse later!!!
-// //     shared_data().rh_grasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(r_end_hand_pose_stamped));
-//     
-//     //// define the end frame - from vision module
-//     // wait for vision message
-//     if (shared_data().current_hand == shared_data().rh_id)
-// 	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_rh_grasp_topic_3D);
-//     else
-// 	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_lh_grasp_topic_3D);
-//     
-//     // convert object pose_stamped --> pose --> eigen
-//     tf::Transform tf_cam_to_obj;
-//     geometry_msgs::Pose temp_pose;
-//     temp_pose.position = shared_data().grasp_pose->pose.position;
-//     temp_pose.orientation = shared_data().grasp_pose->pose.orientation;
-//     tf::poseMsgToTF(temp_pose, tf_cam_to_obj);
-//     geometry_msgs::Transform geo_trs_cam_to_obj;
-//     tf::transformTFToMsg(tf_cam_to_obj, geo_trs_cam_to_obj);
-//     Eigen::Affine3d eigen_cam_to_obj;
-//     tf::transformMsgToEigen(geo_trs_cam_to_obj, eigen_cam_to_obj);
-//     
-//     // get transformation from world to cam
-//     Eigen::Affine3d eigen_world_to_cam;
-//     //tf.getTransformTf("world_odom", "multisense/left_camera_optical_frame", world_to_cam); // wrong order
-//     //tf.getTransformTf("multisense/left_camera_optical_frame", "world_odom", world_to_cam); // ok
-//     tf.getTransformTf(shared_data().left_camera_frame, shared_data().world_frame, eigen_world_to_cam);
-//     
-//     // get final world to object transform
-//     Eigen::Affine3d eigen_world_to_object;
-//     eigen_world_to_object = eigen_world_to_cam * eigen_cam_to_obj;
-//     
-//     // convert eign to msg pose
-//     geometry_msgs::Pose geo_pose_end_grasp_pose;
-//     tf::poseEigenToMsg (eigen_world_to_object, geo_pose_end_grasp_pose);      
-//     
-//     // keep the position only
-//     geometry_msgs::PoseStamped geo_posestamped_end_grasp_pose;
-//     geo_posestamped_end_grasp_pose.pose.position = geo_pose_end_grasp_pose.position;
-//     std::cout << "--- POSITION 1: " << geo_posestamped_end_grasp_pose.pose.position.x << " " 
-// 				    << geo_posestamped_end_grasp_pose.pose.position.y << " " 
-// 				    << geo_posestamped_end_grasp_pose.pose.position.z << std::endl;
-// //     temp_pose_stamp.pose.orientation.x = 0;
-// //     temp_pose_stamp.pose.orientation.y = -0.5591931143131625;
-// //     temp_pose_stamp.pose.orientation.z = 0;
-// //     temp_pose_stamp.pose.orientation.w = 0.8290374303399975;
-//     geo_posestamped_end_grasp_pose.pose.orientation.x = 0;
-//     geo_posestamped_end_grasp_pose.pose.orientation.y = 0;
-//     geo_posestamped_end_grasp_pose.pose.orientation.z = 0;
-//     geo_posestamped_end_grasp_pose.pose.orientation.w = 1;
-//     //temp_pose_stamp.header.frame_id = "world_odom";
-//     geo_posestamped_end_grasp_pose.header.frame_id = shared_data().world_frame;
+    std::cout << "State: REACH ENTRY ============" << std::endl;
+    // Update robot model
+    shared_data()._robot->sense();
+    Eigen::Affine3d world_T_bl;
+    std::string fb;
+    shared_data()._robot->model().getFloatingBaseLink(fb);
+    tf.getTransformTf(fb, shared_data ().world_frame, world_T_bl);
+    shared_data()._robot->model().setFloatingBasePose(world_T_bl);
+    shared_data()._robot->model().update();
+    if (shared_data().verbose_print) std::cout << "Update robot model done!" << std::endl;
+    
+    // Get starting hand pose
+    if (shared_data().current_hand == shared_data().rh_id)
+    {
+	shared_data()._robot->model().getPose("RSoftHand", shared_data().start_hand_pose);
+	if (shared_data().verbose_print) std::cout << "Get starting pose from RIGHT HAND ok!" << std::endl;
+    }
+    else
+    {
+	shared_data()._robot->model().getPose("LSoftHand", shared_data().start_hand_pose);
+	if (shared_data().verbose_print) std::cout << "Get starting pose from LEFT HAND ok!" << std::endl;
+    }
+    
+    
+    // Convert start hand pose (eigen) to geometry msg (pose)
+    geometry_msgs::Pose geo_pose_start_hand_pose;
+    tf::poseEigenToMsg (shared_data().start_hand_pose, geo_pose_start_hand_pose);
+    
+    // Convert geometry msg (pose) to geometry msg (pose stamped)
+    geometry_msgs::PoseStamped geo_posestamped_start_hand_pose;
+    geo_posestamped_start_hand_pose.pose = geo_pose_start_hand_pose;
+
+    
+    
+
+   
+//     //// define the end frame - HARD CODE
+//     geometry_msgs::PoseStamped r_end_hand_pose_stamped;
+//     r_end_hand_pose_stamped.pose.position.x = 0.619;  // position and orientation are in world frame
+//     r_end_hand_pose_stamped.pose.position.y = -0.29;
+//     r_end_hand_pose_stamped.pose.position.z = 0.873;
+//     r_end_hand_pose_stamped.pose.orientation.x = 0;
+//     r_end_hand_pose_stamped.pose.orientation.y = -0.5591931143131625;
+//     r_end_hand_pose_stamped.pose.orientation.z = 0;
+//     r_end_hand_pose_stamped.pose.orientation.w = 0.8290374303399975;
 //     // need to cast the variable as the pointer --> reverse later!!!
-//     shared_data().grasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_end_grasp_pose));
-//      
-//     if (shared_data().current_hand == shared_data().rh_id)
-// 	shared_data()._pub_rh_grasp_pose.publish(geo_posestamped_end_grasp_pose);
-//     else
-// 	shared_data()._pub_lh_grasp_pose.publish(geo_posestamped_end_grasp_pose);
+//     shared_data().rh_grasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(r_end_hand_pose_stamped));
+    
+    //// define the end frame - from vision module
+    // wait for vision message
+    if (shared_data().current_hand == shared_data().rh_id)
+    {
+	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_rh_grasp_topic_3D);
+	std::cout << "GOT MESSAGE FROM vs_rh_grasp_topic_3D" << std::endl;
+    }
+    else
+	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_lh_grasp_topic_3D);
+    
+    // convert object pose_stamped --> pose --> eigen
+    tf::Transform tf_cam_to_obj;
+    geometry_msgs::Pose temp_pose;
+    temp_pose.position = shared_data().grasp_pose->pose.position;
+    temp_pose.orientation = shared_data().grasp_pose->pose.orientation;
+    tf::poseMsgToTF(temp_pose, tf_cam_to_obj);
+    geometry_msgs::Transform geo_trs_cam_to_obj;
+    tf::transformTFToMsg(tf_cam_to_obj, geo_trs_cam_to_obj);
+    Eigen::Affine3d eigen_cam_to_obj;
+    tf::transformMsgToEigen(geo_trs_cam_to_obj, eigen_cam_to_obj);
+    
+    // get transformation from world to cam
+    Eigen::Affine3d eigen_world_to_cam;
+    //tf.getTransformTf("world_odom", "multisense/left_camera_optical_frame", world_to_cam); // wrong order
+    //tf.getTransformTf("multisense/left_camera_optical_frame", "world_odom", world_to_cam); // ok
+    tf.getTransformTf(shared_data().left_camera_frame, shared_data().world_frame, eigen_world_to_cam);
+    
+    // get final world to object transform
+    Eigen::Affine3d eigen_world_to_object;
+    eigen_world_to_object = eigen_world_to_cam * eigen_cam_to_obj;
+    
+    // convert eign to msg pose
+    geometry_msgs::Pose geo_pose_end_grasp_pose;
+    tf::poseEigenToMsg (eigen_world_to_object, geo_pose_end_grasp_pose);      
+    
+    // keep the position only
+    geometry_msgs::PoseStamped geo_posestamped_end_grasp_pose;
+    geo_posestamped_end_grasp_pose.pose.position = geo_pose_end_grasp_pose.position;
+    std::cout << "--- POSITION 1: " << geo_posestamped_end_grasp_pose.pose.position.x << " " 
+				    << geo_posestamped_end_grasp_pose.pose.position.y << " " 
+				    << geo_posestamped_end_grasp_pose.pose.position.z << std::endl;
+//     temp_pose_stamp.pose.orientation.x = 0;
+//     temp_pose_stamp.pose.orientation.y = -0.5591931143131625;
+//     temp_pose_stamp.pose.orientation.z = 0;
+//     temp_pose_stamp.pose.orientation.w = 0.8290374303399975;
+    geo_posestamped_end_grasp_pose.pose.orientation.x = 0;
+    geo_posestamped_end_grasp_pose.pose.orientation.y = 0;
+    geo_posestamped_end_grasp_pose.pose.orientation.z = 0;
+    geo_posestamped_end_grasp_pose.pose.orientation.w = 1;
+    //temp_pose_stamp.header.frame_id = "world_odom";
+    geo_posestamped_end_grasp_pose.header.frame_id = shared_data().world_frame;
+    // need to cast the variable as the pointer --> reverse later!!!
+    shared_data().grasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_end_grasp_pose));
+     
+    if (shared_data().current_hand == shared_data().rh_id)
+	shared_data()._pub_rh_grasp_pose.publish(geo_posestamped_end_grasp_pose);
+    else
+	shared_data()._pub_lh_grasp_pose.publish(geo_posestamped_end_grasp_pose);
+    
+    
+    // Create the Cartesian trajectories, set starting frame
+    trajectory_utils::Cartesian start_traj;
+    if (shared_data().current_hand == shared_data().rh_id)
+	start_traj.distal_frame = "RSoftHand";
+    else
+	start_traj.distal_frame = "LSoftHand";
+    start_traj.frame = geo_posestamped_start_hand_pose; // must be gsg pose stamped?
+    
+        
+    // CALL trajectory_utils
+    trajectory_utils::Cartesian end;
+    if (shared_data().current_hand == shared_data().rh_id)
+	end.distal_frame = "RSoftHand";
+    else
+	end.distal_frame = "LSoftHand";
+    end.frame = *shared_data().grasp_pose; // to test hardcode pose; rh_grasp_pose is a pointer --> need *
+
+    // define the first segment
+    trajectory_utils::segment s1;
+    s1.type.data = 0;        // min jerk traj
+    s1.T.data = 5.0;        // traj duration 1 second      
+    s1.start = start_traj;   // start pose
+    s1.end = end;            // end pose 
+
+    
+//     start_traj.frame = end_hand_pose_stamped;
+// 
+//     end_hand_pose_stamped.pose.position.z =
+//     shared_data()._hose_grasp_pose->pose.position.z;
+//     end.frame = end_hand_pose_stamped;
 //     
-//     
-//     // Create the Cartesian trajectories, set starting frame
-//     trajectory_utils::Cartesian start_traj;
-//     if (shared_data().current_hand == shared_data().rh_id)
-// 	start_traj.distal_frame = "RSoftHand";
-//     else
-// 	start_traj.distal_frame = "LSoftHand";
-//     start_traj.frame = geo_posestamped_start_hand_pose; // must be gsg pose stamped?
-//     
-//         
-//     // CALL trajectory_utils
-//     trajectory_utils::Cartesian end;
-//     if (shared_data().current_hand == shared_data().rh_id)
-// 	end.distal_frame = "RSoftHand";
-//     else
-// 	end.distal_frame = "LSoftHand";
-//     end.frame = *shared_data().grasp_pose; // to test hardcode pose; rh_grasp_pose is a pointer --> need *
-// 
-//     // define the first segment
-//     trajectory_utils::segment s1;
-//     s1.type.data = 0;        // min jerk traj
-//     s1.T.data = 5.0;        // traj duration 1 second      
-//     s1.start = start_traj;   // start pose
-//     s1.end = end;            // end pose 
-// 
-//     
-// //     start_traj.frame = end_hand_pose_stamped;
-// // 
-// //     end_hand_pose_stamped.pose.position.z =
-// //     shared_data()._hose_grasp_pose->pose.position.z;
-// //     end.frame = end_hand_pose_stamped;
-// //     
-// //     end_hand_pose_stamped.pose.position.z = 0.1;
-// //     end.frame = end_hand_pose_stamped;
-// 
-// //     // define the second segment
-// //     trajectory_utils::segment s2;
-// //     s2.type.data = 0;        // min jerk traj
-// //     s2.T.data = 10.0;        // traj duration 1 second      
-// //     s2.start = start_traj;   // start pose
-// //     s2.end = end;            // end pose 
-// 
-//     // only one segment in this example
-//     std::vector<trajectory_utils::segment> segments;
-//     segments.push_back (s1);
-//     //segments.push_back (s2);
-// 
-//     // prapere the advr_segment_control
-//     ADVR_ROS::advr_segment_control srv;
-//     srv.request.segment_trj.header.frame_id = shared_data ().world_frame;
-//     srv.request.segment_trj.header.stamp = ros::Time::now();
-//     srv.request.segment_trj.segments = segments;
-// 
-//     // call the service
-//     shared_data()._client.call(srv);
+//     end_hand_pose_stamped.pose.position.z = 0.1;
+//     end.frame = end_hand_pose_stamped;
+
+//     // define the second segment
+//     trajectory_utils::segment s2;
+//     s2.type.data = 0;        // min jerk traj
+//     s2.T.data = 10.0;        // traj duration 1 second      
+//     s2.start = start_traj;   // start pose
+//     s2.end = end;            // end pose 
+
+    // only one segment in this example
+    std::vector<trajectory_utils::segment> segments;
+    segments.push_back (s1);
+    //segments.push_back (s2);
+
+    // prapere the advr_segment_control
+    ADVR_ROS::advr_segment_control srv;
+    srv.request.segment_trj.header.frame_id = shared_data ().world_frame;
+    srv.request.segment_trj.header.stamp = ros::Time::now();
+    srv.request.segment_trj.segments = segments;
+
+    // call the service
+    shared_data()._client.call(srv);
 
    
 }
