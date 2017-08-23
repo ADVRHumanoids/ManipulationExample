@@ -104,6 +104,8 @@ namespace myfsm{
 	// ros topic for 3D pose of objects (in camera frame) - for right hand, left hand
 	const std::string vs_rh_obj_pose_3D = "vs_rh_obj_pose_3D";  // MUST BE THE SAME IN: pub_rh_obj_pose_3D = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_obj_pose_3D", 1);
 	const std::string vs_lh_obj_pose_3D = "vs_lh_obj_pose_3D";
+	const std::string vs_rh_obj_pose_3D_FAKE = "vs_rh_obj_pose_3D_FAKE";  // fake pose - for debugging
+	
 	
 	const std::string rh_id = "rh"; // id for choosing right hand
 	const std::string lh_id = "lh";

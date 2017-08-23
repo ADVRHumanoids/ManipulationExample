@@ -114,14 +114,13 @@ namespace XBotPlugin
 	ros::Subscriber sub_depth;
 	ros::Subscriber sub_camera_info;
 	ros::Subscriber sub_point_cloud;
-	ros::Subscriber sub_vision_data; // Subscribe to message from vision module (as string)
-	ros::Subscriber sub_rh_obj_pose_2D; // Subscribe to vs_point_right_2D topic
-	
-	ros::Publisher  pub_rh_obj_pose_3D; // Publish vision data (in 3D pose) to FSM
+	ros::Subscriber sub_vs_rh_obj_pose_2D; // Subscribe to vs_point_right_2D topic
+	ros::Subscriber sub_vs_rh_obj_pose_2D_FAKE;
+	ros::Publisher  pub_vs_rh_obj_pose_3D; // Publish vision data (in 3D pose) to FSM
+	ros::Publisher  pub_vs_rh_obj_pose_3D_FAKE; // Publish FAKE pose to FSM
 	
 	geometry_msgs::PoseStamped grasp_pose_right;
 	
-	std::string vision_string;
  	double camera_info[4]; // fx, fy, cx, cy --> camera details
  	int camera_width, camera_height;
 	cv::Mat rgb_img, dep_img;
@@ -134,8 +133,8 @@ namespace XBotPlugin
         virtual void depth_callback (const sensor_msgs::ImageConstPtr & msg);   
 	virtual void camera_info_callback (const sensor_msgs::CameraInfoPtr & msg);
         virtual void pointcloud_callback (const sensor_msgs::PointCloud2ConstPtr & msg);
-	virtual void vision_data_callback (const std_msgs::String::ConstPtr & msg);
 	virtual void point_right_callback(const geometry_msgs::Point::ConstPtr & msg);
+	virtual void point_right_callback_FAKE(const geometry_msgs::Point::ConstPtr & msg);
 
 
     };
