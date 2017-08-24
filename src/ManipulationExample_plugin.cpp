@@ -158,9 +158,8 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     
     fsm.shared_data()._pub_rb_rh_grasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_rh_grasp_pose", 1);
     fsm.shared_data()._pub_rb_lh_grasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_lh_grasp_pose", 1);
-    
-    //fsm.shared_data()._pub_rh_pregrasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_rh_pregrasp_pose", 1);
-    //fsm.shared_data()._pub_lh_pregrasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_lh_pregrasp_pose", 1);
+    fsm.shared_data()._pub_rb_rh_pregrasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_rh_pregrasp_pose", 1);
+    fsm.shared_data()._pub_rb_lh_pregrasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_lh_pregrasp_pose", 1);
     
     
     /*Saves robot as shared variable between states*/

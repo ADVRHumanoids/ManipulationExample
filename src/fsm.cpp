@@ -161,37 +161,53 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg)
     tf::poseEigenToMsg (eigen_world_to_object, geo_pose_end_grasp_pose);      
     
     // keep the position only
-    geometry_msgs::PoseStamped geo_posestamped_end_grasp_pose;
-    geo_posestamped_end_grasp_pose.pose.position = geo_pose_end_grasp_pose.position;
-    std::cout << "--- POSITION 1: " << geo_posestamped_end_grasp_pose.pose.position.x << " " 
-				    << geo_posestamped_end_grasp_pose.pose.position.y << " " 
-				    << geo_posestamped_end_grasp_pose.pose.position.z << std::endl;
-//     geo_posestamped_end_grasp_pose.pose.orientation.x = 0;
-//     geo_posestamped_end_grasp_pose.pose.orientation.y = -0.5591931143131625;
-//     geo_posestamped_end_grasp_pose.pose.orientation.z = 0;
-//     geo_posestamped_end_grasp_pose.pose.orientation.w = 0.8290374303399975;  // first hard code pose
+    geometry_msgs::PoseStamped geo_posestamped_grasp_pose;
+    geo_posestamped_grasp_pose.pose.position = geo_pose_end_grasp_pose.position;
+    std::cout << "--- POSITION 1: " << geo_posestamped_grasp_pose.pose.position.x << " " 
+				    << geo_posestamped_grasp_pose.pose.position.y << " " 
+				    << geo_posestamped_grasp_pose.pose.position.z << std::endl;
+//     geo_posestamped_grasp_pose.pose.orientation.x = 0;
+//     geo_posestamped_grasp_pose.pose.orientation.y = -0.5591931143131625;
+//     geo_posestamped_grasp_pose.pose.orientation.z = 0;
+//     geo_posestamped_grasp_pose.pose.orientation.w = 0.8290374303399975;  // first hard code pose
 				    
-//     geo_posestamped_end_grasp_pose.pose.orientation.x = 0;
-//     geo_posestamped_end_grasp_pose.pose.orientation.y = 0;
-//     geo_posestamped_end_grasp_pose.pose.orientation.z = 0;
-//     geo_posestamped_end_grasp_pose.pose.orientation.w = 1; // No rotation - should be the same with world frame
+//     geo_posestamped_grasp_pose.pose.orientation.x = 0;
+//     geo_posestamped_grasp_pose.pose.orientation.y = 0;
+//     geo_posestamped_grasp_pose.pose.orientation.z = 0;
+//     geo_posestamped_grasp_pose.pose.orientation.w = 1; // No rotation - should be the same with world frame
 				    
-    geo_posestamped_end_grasp_pose.pose.orientation.x = 0;
-    geo_posestamped_end_grasp_pose.pose.orientation.y = -0.7071;  // rotate 270 along y axis - "sidegrasp" pose
-    geo_posestamped_end_grasp_pose.pose.orientation.z = 0;
-    geo_posestamped_end_grasp_pose.pose.orientation.w = 0.7071; 
+    geo_posestamped_grasp_pose.pose.orientation.x = 0;
+    geo_posestamped_grasp_pose.pose.orientation.y = -0.7071;  // rotate 270 along y axis - "sidegrasp" pose
+    geo_posestamped_grasp_pose.pose.orientation.z = 0;
+    geo_posestamped_grasp_pose.pose.orientation.w = 0.7071; 
     
     //temp_pose_stamp.header.frame_id = "world_odom";
-    geo_posestamped_end_grasp_pose.header.frame_id = shared_data().world_frame;
+    geo_posestamped_grasp_pose.header.frame_id = shared_data().world_frame;
     // need to cast the variable as the pointer --> reverse later!!!
-    shared_data().grasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_end_grasp_pose));
+    shared_data().grasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_grasp_pose));
      
     // publish obj pose message in world frame
     if (shared_data().current_hand == shared_data().rh_id)
-	shared_data()._pub_rb_rh_grasp_pose.publish(geo_posestamped_end_grasp_pose);
+	shared_data()._pub_rb_rh_grasp_pose.publish(geo_posestamped_grasp_pose);
     else
-	shared_data()._pub_rb_lh_grasp_pose.publish(geo_posestamped_end_grasp_pose);
+	shared_data()._pub_rb_lh_grasp_pose.publish(geo_posestamped_grasp_pose);
     
+    // find pregrasp pose
+    geometry_msgs::PoseStamped geo_posestamped_pregrasp_pose;
+    geo_posestamped_pregrasp_pose = *shared_data().grasp_pose; // same location, same orientation
+    geo_posestamped_pregrasp_pose.pose.position.x += 0.0;  // no change
+    geo_posestamped_pregrasp_pose.pose.position.y -= 0.1;  // far to the right
+    geo_posestamped_pregrasp_pose.pose.position.z += 0.1;  // close to the robot
+    shared_data().pregrasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_pregrasp_pose)); // construct the pregrasp pose
+    // publish obj pregrasp_pose message in world frame
+    if (shared_data().current_hand == shared_data().rh_id)
+    {
+	shared_data()._pub_rb_rh_pregrasp_pose.publish(geo_posestamped_pregrasp_pose);
+	if (shared_data().verbose_print)
+	    std::cout << "Publishing rh_pregrasp_pose pose" << std::endl;
+    }
+    else
+	shared_data()._pub_rb_lh_pregrasp_pose.publish(geo_posestamped_pregrasp_pose);
     
     // =====================================================================================
     
