@@ -195,9 +195,9 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg)
     // find pregrasp pose
     geometry_msgs::PoseStamped geo_posestamped_pregrasp_pose;
     geo_posestamped_pregrasp_pose = *shared_data().grasp_pose; // same location, same orientation
-    geo_posestamped_pregrasp_pose.pose.position.x += 0.0;  // no change
-    geo_posestamped_pregrasp_pose.pose.position.y -= 0.1;  // far to the right
-    geo_posestamped_pregrasp_pose.pose.position.z += 0.1;  // close to the robot
+    geo_posestamped_pregrasp_pose.pose.position.x -= 0.1;  // (x towards the robot) - close to the robot
+    geo_posestamped_pregrasp_pose.pose.position.y -= 0.1;  // (y from right to left) - far to the right
+    geo_posestamped_pregrasp_pose.pose.position.z += 0.0;  // (z is up) no change --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
     shared_data().pregrasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_pregrasp_pose)); // construct the pregrasp pose
     // publish obj pregrasp_pose message in world frame
     if (shared_data().current_hand == shared_data().rh_id)
@@ -209,40 +209,40 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg)
     else
 	shared_data()._pub_rb_lh_pregrasp_pose.publish(geo_posestamped_pregrasp_pose);
     
-    // =====================================================================================
     
-    // Create the Cartesian trajectories - starting ...
-    trajectory_utils::Cartesian start_traj;
-    start_traj.distal_frame = "RSoftHand";
-    start_traj.frame = geo_posestamped_start_hand_pose;
-    
-    
-    // Create the Cartesian trajectories - ending ...
-    trajectory_utils::Cartesian end;
-    end.distal_frame = "RSoftHand";
-    //end.frame = r_end_hand_pose_stamped;
-    end.frame = *shared_data().grasp_pose; // to test hardcode pose; rh_grasp_pose is a pointer --> need *
-
-    // define the first segment
-    trajectory_utils::segment s1;
-    s1.type.data = 0;        // min jerk traj
-    s1.T.data = 5.0;         // traj duration 1 second      
-    s1.start = start_traj;   // start pose
-    s1.end = end;            // end pose 
-
-    // only one segment in this example
-    std::vector<trajectory_utils::segment> segments;
-    segments.push_back (s1);
-    //segments.push_back (s2);
-
-    // prapere the advr_segment_control
-    ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = shared_data ().world_frame;
-    srv.request.segment_trj.header.stamp = ros::Time::now();
-    srv.request.segment_trj.segments = segments;
-
-    // call the service
-    shared_data()._client.call(srv);
+//     // =====================================================================================
+//     // Create the Cartesian trajectories - starting ...
+//     trajectory_utils::Cartesian start_traj;
+//     start_traj.distal_frame = "RSoftHand";
+//     start_traj.frame = geo_posestamped_start_hand_pose;
+//     
+//     
+//     // Create the Cartesian trajectories - ending ...
+//     trajectory_utils::Cartesian end;
+//     end.distal_frame = "RSoftHand";
+//     //end.frame = r_end_hand_pose_stamped;
+//     end.frame = *shared_data().grasp_pose; // to test hardcode pose; rh_grasp_pose is a pointer --> need *
+// 
+//     // define the first segment
+//     trajectory_utils::segment s1;
+//     s1.type.data = 0;        // min jerk traj
+//     s1.T.data = 5.0;         // traj duration 1 second      
+//     s1.start = start_traj;   // start pose
+//     s1.end = end;            // end pose 
+// 
+//     // only one segment in this example
+//     std::vector<trajectory_utils::segment> segments;
+//     segments.push_back (s1);
+//     //segments.push_back (s2);
+// 
+//     // prapere the advr_segment_control
+//     ADVR_ROS::advr_segment_control srv;
+//     srv.request.segment_trj.header.frame_id = shared_data ().world_frame;
+//     srv.request.segment_trj.header.stamp = ros::Time::now();
+//     srv.request.segment_trj.segments = segments;
+// 
+//     // call the service
+//     shared_data()._client.call(srv);
 
     
    
