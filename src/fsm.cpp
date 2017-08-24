@@ -166,15 +166,21 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg)
     std::cout << "--- POSITION 1: " << geo_posestamped_end_grasp_pose.pose.position.x << " " 
 				    << geo_posestamped_end_grasp_pose.pose.position.y << " " 
 				    << geo_posestamped_end_grasp_pose.pose.position.z << std::endl;
-    geo_posestamped_end_grasp_pose.pose.orientation.x = 0;
-    geo_posestamped_end_grasp_pose.pose.orientation.y = -0.5591931143131625;
-    geo_posestamped_end_grasp_pose.pose.orientation.z = 0;
-    geo_posestamped_end_grasp_pose.pose.orientation.w = 0.8290374303399975;
-    
+//     geo_posestamped_end_grasp_pose.pose.orientation.x = 0;
+//     geo_posestamped_end_grasp_pose.pose.orientation.y = -0.5591931143131625;
+//     geo_posestamped_end_grasp_pose.pose.orientation.z = 0;
+//     geo_posestamped_end_grasp_pose.pose.orientation.w = 0.8290374303399975;  // first hard code pose
+				    
 //     geo_posestamped_end_grasp_pose.pose.orientation.x = 0;
 //     geo_posestamped_end_grasp_pose.pose.orientation.y = 0;
 //     geo_posestamped_end_grasp_pose.pose.orientation.z = 0;
-//     geo_posestamped_end_grasp_pose.pose.orientation.w = 1; // No rotation
+//     geo_posestamped_end_grasp_pose.pose.orientation.w = 1; // No rotation - should be the same with world frame
+				    
+    geo_posestamped_end_grasp_pose.pose.orientation.x = 0;
+    geo_posestamped_end_grasp_pose.pose.orientation.y = -0.7071;  // rotate 270 along y axis - "sidegrasp" pose
+    geo_posestamped_end_grasp_pose.pose.orientation.z = 0;
+    geo_posestamped_end_grasp_pose.pose.orientation.w = 0.7071; 
+    
     //temp_pose_stamp.header.frame_id = "world_odom";
     geo_posestamped_end_grasp_pose.header.frame_id = shared_data().world_frame;
     // need to cast the variable as the pointer --> reverse later!!!
