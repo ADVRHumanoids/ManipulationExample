@@ -180,6 +180,7 @@ namespace myfsm{
 	tf::StampedTransform _transform;
     };
     
+     
     
     
     class MacroState : public  XBot::FSM::State< MacroState , SharedData >
@@ -261,69 +262,5 @@ namespace myfsm{
      };
      
      
-    class Idle : public MacroState
-    {
-	virtual std::string get_name() const { return "Idle"; }
-
-	virtual void run(double time, double period);
-
-	virtual void entry(const XBot::FSM::Message& msg);
-
-	virtual void react(const XBot::FSM::Event& e);
-
-	virtual void exit ();
-
-	private:
-        
-     };
-     
- 
-    class Move_RH : public MacroState
-    {
-	virtual std::string get_name() const { return "Move_RH"; }
-
-	virtual void run(double time, double period);
-
-	virtual void entry(const XBot::FSM::Message& msg);
-
-	virtual void react(const XBot::FSM::Event& e);
-
-	virtual void exit ();
-
-	private:
-        
-     };
- 
-    class Grasp_RH : public MacroState
-    {
-	virtual std::string get_name() const { return "Grasp_RH"; }
-
-	virtual void run(double time, double period);
-
-	virtual void entry(const XBot::FSM::Message& msg);
-
-	virtual void react(const XBot::FSM::Event& e);
-
-	virtual void exit ();
-
-	private:
-
-     };
- 
-    class Grasp_RH_Done : public MacroState
-    {
-	virtual std::string get_name() const { return "Grasp_RH_Done"; }
-
-	virtual void run(double time, double period);
-
-	virtual void entry(const XBot::FSM::Message& msg);
-
-	virtual void react(const XBot::FSM::Event& e);
-
-	virtual void exit ();
-
-	private:
-        
-     };
  
 }

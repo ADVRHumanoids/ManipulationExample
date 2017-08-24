@@ -170,10 +170,8 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     fsm.register_state(std::make_shared<myfsm::Detect>());
     fsm.register_state(std::make_shared<myfsm::Prereach>());
     fsm.register_state(std::make_shared<myfsm::Reach>());
-    fsm.register_state(std::make_shared<myfsm::Idle>());
-    fsm.register_state(std::make_shared<myfsm::Move_RH>());
-    fsm.register_state(std::make_shared<myfsm::Grasp_RH>());
-    fsm.register_state(std::make_shared<myfsm::Grasp_RH_Done>());
+    
+    
     
     // Initialize the FSM with the initial state
     _robot->getJointPosition(fsm.shared_data()._q0);
