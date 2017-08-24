@@ -115,10 +115,11 @@ namespace myfsm{
 	
 	bool verbose_print = true;
 	
+	const std::string str_seperator = "===========================================================";
     };
     
     // ad tfHandler class
-     class tfHandler
+    class tfHandler
     {
     public:
 	tfHandler():
@@ -153,7 +154,7 @@ namespace myfsm{
 	
 	bool getTransformTf_direct (const std::string& parent,
 				    const std::string& child,
-				    tf::StampedTransform& _tf_transform_direct)
+				    tf::StampedTransform& _tf_transform_direct)  // return tf Transform instead of Eigen
 	{
 	    try
 	    {
@@ -209,6 +210,40 @@ namespace myfsm{
         
     };
      
+    
+    class Detect : public MacroState
+    {
+	virtual std::string get_name() const { return "Detect"; }
+
+	virtual void run(double time, double period);
+
+	virtual void entry(const XBot::FSM::Message& msg);
+
+	virtual void react(const XBot::FSM::Event& e);
+
+	virtual void exit ();
+
+	private:
+        
+    };
+     
+   
+    class Prereach : public MacroState
+    {
+	virtual std::string get_name() const { return "Prereach"; }
+
+	virtual void run(double time, double period);
+
+	virtual void entry(const XBot::FSM::Message& msg);
+
+	virtual void react(const XBot::FSM::Event& e);
+
+	virtual void exit ();
+
+	private:
+        
+    };
+    
     class Reach : public MacroState
     {
 	virtual std::string get_name() const { return "Reach"; }
@@ -224,6 +259,7 @@ namespace myfsm{
 	private:
         
      };
+     
      
     class Idle : public MacroState
     {
