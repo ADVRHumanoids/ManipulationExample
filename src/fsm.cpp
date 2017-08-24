@@ -202,7 +202,7 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
     geo_posestamped_raise_pose = *shared_data().grasp_pose; // same location, same orientation
     geo_posestamped_raise_pose.pose.position.x -= 0.1;  // (x from the robot to further) - close to the robot
     geo_posestamped_raise_pose.pose.position.y -= 0.1;  // (y from right to left) - far to the right
-    geo_posestamped_raise_pose.pose.position.z += 0.2;  // (z is up) --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
+    geo_posestamped_raise_pose.pose.position.z += 0.1;  // (z is up) --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
     shared_data().raise_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_raise_pose)); // construct the pregrasp pose
     // publish obj pregrasp_pose message in world frame
     if (shared_data().current_hand == shared_data().rh_id)
