@@ -148,8 +148,7 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
 //     // FSM vision
 //     fsm.shared_data().point_cloud_ptr = point_cloud_ptr;
 //     fsm.shared_data().vision_string = vision_string;
-    
-    
+        
     // FSM robot
     fsm.shared_data()._nh =  std::make_shared<ros::NodeHandle>();
     fsm.shared_data().command = command;
@@ -160,6 +159,11 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     fsm.shared_data()._pub_rb_lh_grasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_lh_grasp_pose", 1);
     fsm.shared_data()._pub_rb_rh_pregrasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_rh_pregrasp_pose", 1);
     fsm.shared_data()._pub_rb_lh_pregrasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_lh_pregrasp_pose", 1);
+    fsm.shared_data()._pub_rb_rh_raise_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_rh_raise_pose", 1);
+    
+    fsm.shared_data()._pub_grasp_plugin_rh = fsm.shared_data()._nh->advertise<std_msgs::String>("/grasp/RWrMot3/goalGrasp",1);
+    fsm.shared_data()._pub_grasp_plugin_lh = fsm.shared_data()._nh->advertise<std_msgs::String>("/grasp/LWrMot3/goalGrasp",1);
+    fsm.shared_data()._grasp_client = fsm.shared_data()._nh->serviceClient<ADVR_ROS::advr_grasp_control_srv>("grasp_control");
     
     
     /*Saves robot as shared variable between states*/
@@ -170,6 +174,9 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     fsm.register_state(std::make_shared<myfsm::Detect>());
     fsm.register_state(std::make_shared<myfsm::Prereach>());
     fsm.register_state(std::make_shared<myfsm::Reach>());
+    fsm.register_state(std::make_shared<myfsm::Grasp>());
+    fsm.register_state(std::make_shared<myfsm::Raise>());
+    fsm.register_state(std::make_shared<myfsm::Ungrasp>());
     
     
     

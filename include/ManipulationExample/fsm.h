@@ -26,6 +26,7 @@
 #include <std_msgs/String.h>
 
 #include <ADVR_ROS/advr_segment_control.h>
+#include <ADVR_ROS/advr_grasp_control_srv.h>
 
 #include <trajectory_utils/segment.h>
 #include <trajectory_utils/Cartesian.h>
@@ -77,6 +78,13 @@ namespace myfsm{
 	ros::Publisher _pub_rb_lh_grasp_pose;
 	ros::Publisher _pub_rb_lh_pregrasp_pose;
 	
+	ros::Publisher _pub_rb_rh_raise_pose;
+	
+	
+	ros::Publisher _pub_grasp_plugin_rh; // grasp plugin for right hand
+	ros::Publisher _pub_grasp_plugin_lh; 
+	ros::ServiceClient _grasp_client;
+	
 	XBot::RobotInterface::Ptr _robot;
 
 	ros::ServiceClient _client;
@@ -97,7 +105,7 @@ namespace myfsm{
 	const std::string left_camera_frame = "multisense/left_camera_optical_frame";
 	
 	// grasp pose
-	geometry_msgs::PoseStamped::ConstPtr grasp_pose, pregrasp_pose;  // must use ConstPtr, not Ptr
+	geometry_msgs::PoseStamped::ConstPtr grasp_pose, pregrasp_pose, raise_pose;  // must use ConstPtr, not Ptr
 	
 	// ros topic for 3D pose of objects (in camera frame) - for right hand, left hand
 	const std::string vs_rh_obj_pose_3D = "vs_rh_obj_pose_3D";  // MUST BE THE SAME IN: pub_rh_obj_pose_3D = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_obj_pose_3D", 1);
@@ -113,8 +121,8 @@ namespace myfsm{
 	std::string current_hand = rh_id;  // current hand in use - default is right hand
 	std::string current_grasp_strategy = side_grasp; // current grasp strategy - default is side grasp
 	
+	// debug 
 	bool verbose_print = true;
-	
 	const std::string str_seperator = "===========================================================";
     };
     
@@ -261,6 +269,53 @@ namespace myfsm{
         
      };
      
+    class Grasp : public MacroState
+    {
+	virtual std::string get_name() const { return "Grasp"; }
+
+	virtual void run(double time, double period);
+
+	virtual void entry(const XBot::FSM::Message& msg);
+
+	virtual void react(const XBot::FSM::Event& e);
+
+	virtual void exit ();
+
+	private:
+        
+     };
      
+    class Ungrasp : public MacroState
+    {
+	virtual std::string get_name() const { return "Ungrasp"; }
+
+	virtual void run(double time, double period);
+
+	virtual void entry(const XBot::FSM::Message& msg);
+
+	virtual void react(const XBot::FSM::Event& e);
+
+	virtual void exit ();
+
+	private:
+        
+     };
+     
+     
+    class Raise : public MacroState
+    {
+	virtual std::string get_name() const { return "Raise"; }
+
+	virtual void run(double time, double period);
+
+	virtual void entry(const XBot::FSM::Message& msg);
+
+	virtual void react(const XBot::FSM::Event& e);
+
+	virtual void exit ();
+
+	private:
+        
+     };
  
 }
