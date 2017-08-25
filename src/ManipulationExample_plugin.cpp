@@ -142,12 +142,10 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
 //     sub_vs_rh_obj_pose_2D = (*_nh).subscribe("vs_rh_obj_pose_2D", 1, &ManipulationExample::point_right_callback, this); 
 //     sub_vs_rh_obj_pose_2D_FAKE = (*_nh).subscribe("vs_rh_obj_pose_2D_FAKE", 1, &ManipulationExample::point_right_callback_FAKE, this); 
     
-    pub_vs_rh_obj_pose_3D = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_obj_pose_3D", 1); //publish when has "point_right_callback"
-    pub_vs_rh_obj_pose_3D_FAKE = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_obj_pose_3D_FAKE", 1);  // publish with rgb_callback (not work) --> add to point_right_callback_FAKE -  just fake data; in camera frame
+//     pub_vs_rh_obj_pose_3D = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_obj_pose_3D", 1); //publish when has "point_right_callback"
+//     pub_vs_rh_obj_pose_3D_FAKE = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_obj_pose_3D_FAKE", 1);  // publish with rgb_callback (not work) --> add to point_right_callback_FAKE -  just fake data; in camera frame
     
-//     // FSM vision
-//     fsm.shared_data().point_cloud_ptr = point_cloud_ptr;
-//     fsm.shared_data().vision_string = vision_string;
+
         
     // FSM robot
     fsm.shared_data()._nh =  std::make_shared<ros::NodeHandle>();

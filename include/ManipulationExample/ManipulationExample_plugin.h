@@ -32,9 +32,9 @@
 // FSM
 #include "fsm.h"
 
-//ROS
-#include <sensor_msgs/Image.h>
-#include <sensor_msgs/image_encodings.h>
+// //ROS
+// #include <sensor_msgs/Image.h>
+// #include <sensor_msgs/image_encodings.h>
 // #include <image_transport/image_transport.h>
 // #include <cv_bridge/cv_bridge.h>
 // #include "std_msgs/String.h"
@@ -109,17 +109,17 @@ namespace XBotPlugin
 	// Utils
 	double _start_time;
 	
-	// Vision
-	ros::Subscriber sub_rgb;
-	ros::Subscriber sub_depth;
-	ros::Subscriber sub_camera_info;
-	ros::Subscriber sub_point_cloud;
-	ros::Subscriber sub_vs_rh_obj_pose_2D; // Subscribe to vs_point_right_2D topic
-	ros::Subscriber sub_vs_rh_obj_pose_2D_FAKE;
-	ros::Publisher  pub_vs_rh_obj_pose_3D; // Publish vision data (in 3D pose) to FSM
-	ros::Publisher  pub_vs_rh_obj_pose_3D_FAKE; // Publish FAKE pose to FSM
+// 	// Vision
+// 	ros::Subscriber sub_rgb;
+// 	ros::Subscriber sub_depth;
+// 	ros::Subscriber sub_camera_info;
+// 	ros::Subscriber sub_point_cloud;
+// 	ros::Subscriber sub_vs_rh_obj_pose_2D; // Subscribe to vs_point_right_2D topic
+// 	ros::Subscriber sub_vs_rh_obj_pose_2D_FAKE;
+// 	ros::Publisher  pub_vs_rh_obj_pose_3D; // Publish vision data (in 3D pose) to FSM
+// 	ros::Publisher  pub_vs_rh_obj_pose_3D_FAKE; // Publish FAKE pose to FSM
+// 	geometry_msgs::PoseStamped grasp_pose_right;
 	
-	geometry_msgs::PoseStamped grasp_pose_right;
 	
 //  	double camera_info[4]; // fx, fy, cx, cy --> camera details
 //  	int camera_width, camera_height;
