@@ -64,6 +64,9 @@ void myfsm::Home::run (double time, double period)
 	
 	if (!str_cmd.compare("detect"))
 	    transit("Detect");
+	
+	if (!str_cmd.compare("grasp"))
+	    transit("Grasp");
     }
     
 }
@@ -113,8 +116,8 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
     // wait for vision message
     if (shared_data().current_hand == shared_data().rh_id)
     {
-	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_rh_obj_pose_3D);
-	//shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_rh_obj_pose_3D_FAKE); // got fake pose - to debug
+	//shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_rh_obj_pose_3D);
+	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_rh_obj_pose_3D_FAKE); // got fake pose - to debug
 	if (shared_data().verbose_print) std::cout << "GOT MESSAGE FROM vs_rh_grasp_topic_3D" << std::endl;
     }
     else

@@ -35,21 +35,21 @@
 //ROS
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
-#include <image_transport/image_transport.h>
-#include <cv_bridge/cv_bridge.h>
-#include "std_msgs/String.h"
-
-
-//OpenCV
-#include <opencv2/opencv.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
-//PCL
-#include <pcl/features/feature.h>
-#include <pcl/common/centroid.h>
-#include <pcl/common/time.h>
-#include <pcl_conversions/pcl_conversions.h>
+// #include <image_transport/image_transport.h>
+// #include <cv_bridge/cv_bridge.h>
+// #include "std_msgs/String.h"
+// 
+// 
+// //OpenCV
+// #include <opencv2/opencv.hpp>
+// #include <opencv2/imgproc/imgproc.hpp>
+// #include <opencv2/highgui/highgui.hpp>
+// 
+// //PCL
+// #include <pcl/features/feature.h>
+// #include <pcl/common/centroid.h>
+// #include <pcl/common/time.h>
+// #include <pcl_conversions/pcl_conversions.h>
 
 
 namespace XBotPlugin 
@@ -70,7 +70,7 @@ namespace XBotPlugin
 	virtual void on_start(double time);
 	virtual void on_stop(double time);
 	
-	ManipulationExample();
+// 	ManipulationExample();
 
 	
 	
@@ -121,20 +121,20 @@ namespace XBotPlugin
 	
 	geometry_msgs::PoseStamped grasp_pose_right;
 	
- 	double camera_info[4]; // fx, fy, cx, cy --> camera details
- 	int camera_width, camera_height;
-	cv::Mat rgb_img, dep_img;
-	//pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud_ptr (new pcl::PointCloud<pcl::PointXYZ>);
-	pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud_ptr;
+//  	double camera_info[4]; // fx, fy, cx, cy --> camera details
+//  	int camera_width, camera_height;
+// 	cv::Mat rgb_img, dep_img;
+// 	//pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud_ptr (new pcl::PointCloud<pcl::PointXYZ>);
+// 	pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud_ptr;
 	
 	
-	// Callback for camera
-	virtual void rgb_callback (const sensor_msgs::ImageConstPtr & msg);
-        virtual void depth_callback (const sensor_msgs::ImageConstPtr & msg);   
-	virtual void camera_info_callback (const sensor_msgs::CameraInfoPtr & msg);
-        virtual void pointcloud_callback (const sensor_msgs::PointCloud2ConstPtr & msg);
-	virtual void point_right_callback(const geometry_msgs::Point::ConstPtr & msg);
-	virtual void point_right_callback_FAKE(const geometry_msgs::Point::ConstPtr & msg);
+// 	// Callback for camera
+// 	virtual void rgb_callback (const sensor_msgs::ImageConstPtr & msg);
+//         virtual void depth_callback (const sensor_msgs::ImageConstPtr & msg);   
+// 	virtual void camera_info_callback (const sensor_msgs::CameraInfoPtr & msg);
+//         virtual void pointcloud_callback (const sensor_msgs::PointCloud2ConstPtr & msg);
+// 	virtual void point_right_callback(const geometry_msgs::Point::ConstPtr & msg);
+// 	virtual void point_right_callback_FAKE(const geometry_msgs::Point::ConstPtr & msg);
 
 
     };

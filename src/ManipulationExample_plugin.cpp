@@ -31,23 +31,23 @@
 #include <geometry_msgs/Pose.h>
 
 
-//OpenCV
-#include <opencv2/opencv.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
-//PCL
-#include <pcl/features/feature.h>
-#include <pcl/common/centroid.h>
-#include <pcl/common/time.h>
-#include <pcl_conversions/pcl_conversions.h>
-#include <boost/thread/thread.hpp>
-#include <pcl/common/common_headers.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/visualization/pcl_visualizer.h>
-
-//cv_bridge
-#include <cv_bridge/cv_bridge.h>
+// //OpenCV
+// #include <opencv2/opencv.hpp>
+// #include <opencv2/imgproc/imgproc.hpp>
+// #include <opencv2/highgui/highgui.hpp>
+// 
+// //PCL
+// #include <pcl/features/feature.h>
+// #include <pcl/common/centroid.h>
+// #include <pcl/common/time.h>
+// #include <pcl_conversions/pcl_conversions.h>
+// #include <boost/thread/thread.hpp>
+// #include <pcl/common/common_headers.h>
+// #include <pcl/io/pcd_io.h>
+// #include <pcl/visualization/pcl_visualizer.h>
+// 
+// //cv_bridge
+// #include <cv_bridge/cv_bridge.h>
 
 
 /* Specify that the class XBotPlugin::ManipulationExample is a XBot RT plugin with name "ManipulationExample" */
@@ -56,11 +56,11 @@ REGISTER_XBOT_PLUGIN(ManipulationExample, XBotPlugin::ManipulationExample)
 namespace XBotPlugin {
 
 
-// Add constructor    
-ManipulationExample::ManipulationExample(): point_cloud_ptr (new pcl::PointCloud<pcl::PointXYZ>)
-{
-
-}
+// // Add constructor    
+// ManipulationExample::ManipulationExample(): point_cloud_ptr (new pcl::PointCloud<pcl::PointXYZ>)
+// {
+// 
+// }
 
 	
 bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
@@ -132,15 +132,15 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     _nh = std::shared_ptr<ros::NodeHandle>(node_handle);
 
     
-    // Vision
-    sub_rgb = (*_nh).subscribe ("/multisense/left/image_color", 1, &ManipulationExample::rgb_callback, this);
-    sub_depth = (*_nh).subscribe ("/multisense/depth", 1, &ManipulationExample::depth_callback, this);
-    sub_camera_info = (*_nh).subscribe("/multisense/left/camera_info", 1, &ManipulationExample::camera_info_callback, this);
-    //sub_point_cloud = (*_nh).subscribe("/multisense/organized_image_points2", 1, &ManipulationExample::pointcloud_callback, this); // Real camera
-    sub_point_cloud = (*_nh).subscribe("/multisense/points2", 1, &ManipulationExample::pointcloud_callback, this); // In simulation
+//     // Vision
+//     sub_rgb = (*_nh).subscribe ("/multisense/left/image_color", 1, &ManipulationExample::rgb_callback, this);
+//     sub_depth = (*_nh).subscribe ("/multisense/depth", 1, &ManipulationExample::depth_callback, this);
+//     sub_camera_info = (*_nh).subscribe("/multisense/left/camera_info", 1, &ManipulationExample::camera_info_callback, this);
+//     //sub_point_cloud = (*_nh).subscribe("/multisense/organized_image_points2", 1, &ManipulationExample::pointcloud_callback, this); // Real camera
+//     sub_point_cloud = (*_nh).subscribe("/multisense/points2", 1, &ManipulationExample::pointcloud_callback, this); // In simulation
     
-    sub_vs_rh_obj_pose_2D = (*_nh).subscribe("vs_rh_obj_pose_2D", 1, &ManipulationExample::point_right_callback, this); 
-    sub_vs_rh_obj_pose_2D_FAKE = (*_nh).subscribe("vs_rh_obj_pose_2D_FAKE", 1, &ManipulationExample::point_right_callback_FAKE, this); 
+//     sub_vs_rh_obj_pose_2D = (*_nh).subscribe("vs_rh_obj_pose_2D", 1, &ManipulationExample::point_right_callback, this); 
+//     sub_vs_rh_obj_pose_2D_FAKE = (*_nh).subscribe("vs_rh_obj_pose_2D_FAKE", 1, &ManipulationExample::point_right_callback_FAKE, this); 
     
     pub_vs_rh_obj_pose_3D = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_obj_pose_3D", 1); //publish when has "point_right_callback"
     pub_vs_rh_obj_pose_3D_FAKE = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_obj_pose_3D_FAKE", 1);  // publish with rgb_callback (not work) --> add to point_right_callback_FAKE -  just fake data; in camera frame
@@ -251,7 +251,7 @@ bool ManipulationExample::close()
     return true;
 }
 
-
+/*
 void ManipulationExample::camera_info_callback(const sensor_msgs::CameraInfoPtr& msg)
 {
     camera_info[0] = msg->K[0]; //fx
@@ -324,9 +324,9 @@ void ManipulationExample::pointcloud_callback(const sensor_msgs::PointCloud2Cons
     pcl::fromROSMsg(*msg, *point_cloud_ptr);
     //std::cout << "Point cloud size in CB: " << point_cloud_ptr->points.size() << endl;
     
-}
+}*/
 
-
+/*
 void ManipulationExample::point_right_callback(const geometry_msgs::Point::ConstPtr& msg)
 {
     geometry_msgs::Point point_right;
@@ -359,32 +359,32 @@ void ManipulationExample::point_right_callback(const geometry_msgs::Point::Const
 	
 	pub_vs_rh_obj_pose_3D.publish(grasp_pose_right); //publish ok	
     }
-}
+}*/
 
 
-void ManipulationExample::point_right_callback_FAKE(const geometry_msgs::Point::ConstPtr& msg)
-{
-    geometry_msgs::Point point_right;
-    point_right.x = msg->x;
-    point_right.y = msg->y;
-    point_right.z = msg->z;
-    
-    //std::cout << "Got FAKE 2D point: " << point_right.x << " " << point_right.y << " " << point_right.z << std::endl;
-    
-    // Publish fake data - debug
-    geometry_msgs::PoseStamped fake_pose;
-    fake_pose.header.frame_id = "multisense/left_camera_optical_frame"; // publish in camera frame
-    fake_pose.pose.position.x = 0.38;
-    fake_pose.pose.position.y = 0.05;
-    fake_pose.pose.position.z = 0.63;
-    fake_pose.pose.orientation.x = 0;
-    fake_pose.pose.orientation.y = 0;
-    fake_pose.pose.orientation.z = 0;
-    fake_pose.pose.orientation.w = 1;  // Identity - no rotation
-    std::cout << "Publishing FAKE pose ... " << std::endl;
-    pub_vs_rh_obj_pose_3D_FAKE.publish(fake_pose); //publish ok	
-    
-}
+// void ManipulationExample::point_right_callback_FAKE(const geometry_msgs::Point::ConstPtr& msg)
+// {
+//     geometry_msgs::Point point_right;
+//     point_right.x = msg->x;
+//     point_right.y = msg->y;
+//     point_right.z = msg->z;
+//     
+//     //std::cout << "Got FAKE 2D point: " << point_right.x << " " << point_right.y << " " << point_right.z << std::endl;
+//     
+//     // Publish fake data - debug
+//     geometry_msgs::PoseStamped fake_pose;
+//     fake_pose.header.frame_id = "multisense/left_camera_optical_frame"; // publish in camera frame
+//     fake_pose.pose.position.x = 0.38;
+//     fake_pose.pose.position.y = 0.05;
+//     fake_pose.pose.position.z = 0.63;
+//     fake_pose.pose.orientation.x = 0;
+//     fake_pose.pose.orientation.y = 0;
+//     fake_pose.pose.orientation.z = 0;
+//     fake_pose.pose.orientation.w = 1;  // Identity - no rotation
+//     std::cout << "Publishing FAKE pose ... " << std::endl;
+//     pub_vs_rh_obj_pose_3D_FAKE.publish(fake_pose); //publish ok	
+//     
+// }
 
 
 
