@@ -170,6 +170,7 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     /*Registers states*/
     fsm.register_state(std::make_shared<myfsm::Home>());
     fsm.register_state(std::make_shared<myfsm::Detect>());
+    fsm.register_state(std::make_shared<myfsm::Move>());
     fsm.register_state(std::make_shared<myfsm::Prereach>());
     fsm.register_state(std::make_shared<myfsm::Reach>());
     fsm.register_state(std::make_shared<myfsm::Grasp>());
