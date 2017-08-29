@@ -145,7 +145,6 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
 //     pub_vs_rh_obj_pose_3D = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_obj_pose_3D", 1); //publish when has "point_right_callback"
 //     pub_vs_rh_obj_pose_3D_FAKE = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_obj_pose_3D_FAKE", 1);  // publish with rgb_callback (not work) --> add to point_right_callback_FAKE -  just fake data; in camera frame
     
-
         
     // FSM robot
     fsm.shared_data()._nh =  std::make_shared<ros::NodeHandle>();
@@ -158,6 +157,7 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     fsm.shared_data()._pub_rb_rh_pregrasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_rh_pregrasp_pose", 1);
     fsm.shared_data()._pub_rb_lh_pregrasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_lh_pregrasp_pose", 1);
     fsm.shared_data()._pub_rb_rh_raise_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_rh_raise_pose", 1);
+    fsm.shared_data()._pub_rb_last_rh_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_last_rh_pose", 1);
     
     fsm.shared_data()._pub_grasp_plugin_rh = fsm.shared_data()._nh->advertise<std_msgs::String>("/grasp/RWrMot3/goalGrasp",1);
     fsm.shared_data()._pub_grasp_plugin_lh = fsm.shared_data()._nh->advertise<std_msgs::String>("/grasp/LWrMot3/goalGrasp",1);

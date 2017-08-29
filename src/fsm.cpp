@@ -13,7 +13,9 @@ void myfsm::Home::react (const XBot::FSM::Event& e)
 
 void myfsm::Home::entry (const XBot::FSM::Message& msg)
 {
-      
+    std::cout << shared_data().str_seperator << std::endl;
+    std::cout << "State: HOME ENTRY" << std::endl;
+    
 }
 
 void myfsm::Home::run (double time, double period)
@@ -89,8 +91,9 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
 {
     std::cout << shared_data().str_seperator << std::endl;
     std::cout << "State: DETECT ENTRY" << std::endl;
-    
-    // Update robot model (for tf transform)
+   
+    /////////////////////////////////////////////////////////////////////////////////////////
+    // Update robot model
     shared_data()._robot->sense();
     Eigen::Affine3d world_T_bl;
     std::string fb;
@@ -100,17 +103,34 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
     shared_data()._robot->model().update();
     if (shared_data().verbose_print) std::cout << "Update robot model done!" << std::endl;
     
-//     //// define the end frame - HARD CODE
-//     geometry_msgs::PoseStamped r_end_hand_pose_stamped;
-//     r_end_hand_pose_stamped.pose.position.x = 0.619;  // position and orientation are in world frame
-//     r_end_hand_pose_stamped.pose.position.y = -0.29;
-//     r_end_hand_pose_stamped.pose.position.z = 0.873;
-//     r_end_hand_pose_stamped.pose.orientation.x = 0;
-//     r_end_hand_pose_stamped.pose.orientation.y = -0.5591931143131625;
-//     r_end_hand_pose_stamped.pose.orientation.z = 0;
-//     r_end_hand_pose_stamped.pose.orientation.w = 0.8290374303399975;
-//     // need to cast the variable as the pointer --> reverse later!!!
-//     shared_data().rh_grasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(r_end_hand_pose_stamped));
+
+    shared_data()._robot->model().getPose("RSoftHand", shared_data().ei_start_rh_pose);
+    if (shared_data().verbose_print) std::cout << "Get starting pose from RIGHT HAND ok!" << std::endl;
+    
+    shared_data()._robot->model().getPose("LSoftHand", shared_data().ei_start_lh_pose);
+    if (shared_data().verbose_print) std::cout << "Get starting pose from LEFT HAND ok!" << std::endl;
+    
+    
+    // Convert start hand pose (eigen) to geometry msg (pose)
+    geometry_msgs::Pose geo_pose_start_rh_pose;
+    tf::poseEigenToMsg (shared_data().ei_start_rh_pose, geo_pose_start_rh_pose);
+    
+    // Convert geometry msg (pose) to geometry msg (pose stamped)
+    geometry_msgs::PoseStamped geo_posestamped_start_rh_pose;
+    geo_posestamped_start_rh_pose.pose = geo_pose_start_rh_pose;
+    
+    geo_posestamped_start_rh_pose.header.frame_id = shared_data().world_frame; // MUST SET THE HEADER TO world_frame - getPose() return in world frame
+    
+    // update last rh pose
+    shared_data().pst_last_rh_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_start_rh_pose));
+    
+    //TODO: Left Hand
+    
+    shared_data()._pub_rb_last_rh_pose.publish(geo_posestamped_start_rh_pose);
+    std::cout << "Publishing the last right hand pose ..." << std::endl;
+    /////////////////////////////////////////////////////////////////////////////////////////
+    
+    
     
     //// define the end frame - from vision module
     // wait for vision message
@@ -169,6 +189,8 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
     geo_posestamped_grasp_pose.pose.orientation.y = -0.7071;  // rotate 270 along y axis - "sidegrasp" pose
     geo_posestamped_grasp_pose.pose.orientation.z = 0;
     geo_posestamped_grasp_pose.pose.orientation.w = 0.7071; 
+
+    
     
     //temp_pose_stamp.header.frame_id = "world_odom";
     geo_posestamped_grasp_pose.header.frame_id = shared_data().world_frame;
@@ -185,8 +207,8 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
     // find PREGRASP pose ----------------------------------------------------------
     geometry_msgs::PoseStamped geo_posestamped_pregrasp_pose;
     geo_posestamped_pregrasp_pose = *shared_data().grasp_pose; // same location, same orientation
-    geo_posestamped_pregrasp_pose.pose.position.x -= 0.2;  // (x from the robot to further)  - close to the robot
-    geo_posestamped_pregrasp_pose.pose.position.y -= 0.2;  // (y from right to left) - far to the right
+    geo_posestamped_pregrasp_pose.pose.position.x -= 0.1;  // (x from the robot to further)  - close to the robot
+    geo_posestamped_pregrasp_pose.pose.position.y -= 0.1;  // (y from right to left) - far to the right
     geo_posestamped_pregrasp_pose.pose.position.z += 0.0;  // (z is up) no change --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
     shared_data().pregrasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_pregrasp_pose)); // construct the pregrasp pose
     // publish obj pregrasp_pose message in world frame
@@ -216,6 +238,12 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
     }
     else
 	shared_data()._pub_rb_rh_raise_pose.publish(geo_posestamped_raise_pose); // CHANGE to left hand LATER !!!!!!!
+	
+	
+    /////////////////////////////////////////////////////////////
+    // GET CURRENT RIGHT HAND POSE AND Transform --> TO HAVE GOOD FAKE TEST POSE
+    
+	
     
 }
 
@@ -256,43 +284,12 @@ void myfsm::Prereach::react (const XBot::FSM::Event& e)
 
 void myfsm::Prereach::entry (const XBot::FSM::Message& msg)
 {
-    
-    // Update robot model
-    shared_data()._robot->sense();
-    Eigen::Affine3d world_T_bl;
-    std::string fb;
-    shared_data()._robot->model().getFloatingBaseLink(fb);
-    tf.getTransformTf(fb, shared_data ().world_frame, world_T_bl);
-    shared_data()._robot->model().setFloatingBasePose(world_T_bl);
-    shared_data()._robot->model().update();
-    if (shared_data().verbose_print) std::cout << "Update robot model done!" << std::endl;
-    
-    // Get starting hand pose
-    if (shared_data().current_hand == shared_data().rh_id)
-    {
-	shared_data()._robot->model().getPose("RSoftHand", shared_data().start_hand_pose);
-	if (shared_data().verbose_print) std::cout << "Get starting pose from RIGHT HAND ok!" << std::endl;
-    }
-    else
-    {
-	shared_data()._robot->model().getPose("LSoftHand", shared_data().start_hand_pose);
-	if (shared_data().verbose_print) std::cout << "Get starting pose from LEFT HAND ok!" << std::endl;
-    }
-    
-    // Convert start hand pose (eigen) to geometry msg (pose)
-    geometry_msgs::Pose geo_pose_start_hand_pose;
-    tf::poseEigenToMsg (shared_data().start_hand_pose, geo_pose_start_hand_pose);
-    
-    // Convert geometry msg (pose) to geometry msg (pose stamped)
-    geometry_msgs::PoseStamped geo_posestamped_start_hand_pose;
-    geo_posestamped_start_hand_pose.pose = geo_pose_start_hand_pose;
-    
-    
+    //
     // =====================================================================================
     // Create the Cartesian trajectories - starting ...
     trajectory_utils::Cartesian start_traj;
     start_traj.distal_frame = "RSoftHand";
-    start_traj.frame = geo_posestamped_start_hand_pose;
+    start_traj.frame = *shared_data().pst_last_rh_pose;
     
     
     // Create the Cartesian trajectories - ending ...
@@ -304,7 +301,7 @@ void myfsm::Prereach::entry (const XBot::FSM::Message& msg)
     // define the first segment
     trajectory_utils::segment s1;
     s1.type.data = 0;        // min jerk traj
-    s1.T.data = 5.0;         // traj duration 1 second      
+    s1.T.data = 10.0;         // traj duration 1 second      
     s1.start = start_traj;   // start pose
     s1.end = end;            // end pose 
 
@@ -358,36 +355,36 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg)
     std::cout << shared_data().str_seperator << std::endl;
     std::cout << "State: REACH ENTRY" << std::endl;
     
-    // Update robot model
-    shared_data()._robot->sense();
-    Eigen::Affine3d world_T_bl;
-    std::string fb;
-    shared_data()._robot->model().getFloatingBaseLink(fb);
-    tf.getTransformTf(fb, shared_data ().world_frame, world_T_bl);
-    shared_data()._robot->model().setFloatingBasePose(world_T_bl);
-    shared_data()._robot->model().update();
-    if (shared_data().verbose_print) std::cout << "Update robot model done!" << std::endl;
-    
-    // Get starting hand pose
-    if (shared_data().current_hand == shared_data().rh_id)
-    {
-	shared_data()._robot->model().getPose("RSoftHand", shared_data().start_hand_pose);
-	if (shared_data().verbose_print) std::cout << "Get starting pose from RIGHT HAND ok!" << std::endl;
-    }
-    else
-    {
-	shared_data()._robot->model().getPose("LSoftHand", shared_data().start_hand_pose);
-	if (shared_data().verbose_print) std::cout << "Get starting pose from LEFT HAND ok!" << std::endl;
-    }
-    
-    
-    // Convert start hand pose (eigen) to geometry msg (pose)
-    geometry_msgs::Pose geo_pose_start_hand_pose;
-    tf::poseEigenToMsg (shared_data().start_hand_pose, geo_pose_start_hand_pose);
-    
-    // Convert geometry msg (pose) to geometry msg (pose stamped)
-    geometry_msgs::PoseStamped geo_posestamped_start_hand_pose;
-    geo_posestamped_start_hand_pose.pose = geo_pose_start_hand_pose;
+//     // Update robot model
+//     shared_data()._robot->sense();
+//     Eigen::Affine3d world_T_bl;
+//     std::string fb;
+//     shared_data()._robot->model().getFloatingBaseLink(fb);
+//     tf.getTransformTf(fb, shared_data ().world_frame, world_T_bl);
+//     shared_data()._robot->model().setFloatingBasePose(world_T_bl);
+//     shared_data()._robot->model().update();
+//     if (shared_data().verbose_print) std::cout << "Update robot model done!" << std::endl;
+//     
+//     // Get starting hand pose
+//     if (shared_data().current_hand == shared_data().rh_id)
+//     {
+// 	shared_data()._robot->model().getPose("RSoftHand", shared_data().start_hand_pose);
+// 	if (shared_data().verbose_print) std::cout << "Get starting pose from RIGHT HAND ok!" << std::endl;
+//     }
+//     else
+//     {
+// 	shared_data()._robot->model().getPose("LSoftHand", shared_data().start_hand_pose);
+// 	if (shared_data().verbose_print) std::cout << "Get starting pose from LEFT HAND ok!" << std::endl;
+//     }
+//     
+//     
+//     // Convert start hand pose (eigen) to geometry msg (pose)
+//     geometry_msgs::Pose geo_pose_start_hand_pose;
+//     tf::poseEigenToMsg (shared_data().start_hand_pose, geo_pose_start_hand_pose);
+//     
+//     // Convert geometry msg (pose) to geometry msg (pose stamped)
+//     geometry_msgs::PoseStamped geo_posestamped_start_hand_pose;
+//     geo_posestamped_start_hand_pose.pose = geo_pose_start_hand_pose;
 
     
 // //     //// define the end frame - HARD CODE
@@ -492,7 +489,7 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg)
     // Create the Cartesian trajectories - starting ...
     trajectory_utils::Cartesian start_traj;
     start_traj.distal_frame = "RSoftHand";
-    start_traj.frame = geo_posestamped_start_hand_pose;
+    start_traj.frame = *shared_data().pst_last_rh_pose; // CHECK LATER
     
     
     // Create the Cartesian trajectories - ending ...
@@ -612,7 +609,7 @@ void myfsm::Grasp::entry (const XBot::FSM::Message& msg)
 {
     ADVR_ROS::advr_grasp_control_srv srv;
   
-    srv.request.right_grasp = 1.0; // use right hand
+    srv.request.right_grasp = 0.9; // use right hand
     srv.request.left_grasp = 0.0;
     
     // call the service
@@ -708,42 +705,42 @@ void myfsm::Raise::react (const XBot::FSM::Event& e)
 
 void myfsm::Raise::entry (const XBot::FSM::Message& msg)
 {
-    // Update robot model
-    shared_data()._robot->sense();
-    Eigen::Affine3d world_T_bl;
-    std::string fb;
-    shared_data()._robot->model().getFloatingBaseLink(fb);
-    tf.getTransformTf(fb, shared_data ().world_frame, world_T_bl);
-    shared_data()._robot->model().setFloatingBasePose(world_T_bl);
-    shared_data()._robot->model().update();
-    if (shared_data().verbose_print) std::cout << "Update robot model done!" << std::endl;
-    
-    // Get starting hand pose
-    if (shared_data().current_hand == shared_data().rh_id)
-    {
-	shared_data()._robot->model().getPose("RSoftHand", shared_data().start_hand_pose);
-	if (shared_data().verbose_print) std::cout << "Get starting pose from RIGHT HAND ok!" << std::endl;
-    }
-    else
-    {
-	shared_data()._robot->model().getPose("LSoftHand", shared_data().start_hand_pose);
-	if (shared_data().verbose_print) std::cout << "Get starting pose from LEFT HAND ok!" << std::endl;
-    }
-    
-    // Convert start hand pose (eigen) to geometry msg (pose)
-    geometry_msgs::Pose geo_pose_start_hand_pose;
-    tf::poseEigenToMsg (shared_data().start_hand_pose, geo_pose_start_hand_pose);
-    
-    // Convert geometry msg (pose) to geometry msg (pose stamped)
-    geometry_msgs::PoseStamped geo_posestamped_start_hand_pose;
-    geo_posestamped_start_hand_pose.pose = geo_pose_start_hand_pose;
+//     // Update robot model
+//     shared_data()._robot->sense();
+//     Eigen::Affine3d world_T_bl;
+//     std::string fb;
+//     shared_data()._robot->model().getFloatingBaseLink(fb);
+//     tf.getTransformTf(fb, shared_data ().world_frame, world_T_bl);
+//     shared_data()._robot->model().setFloatingBasePose(world_T_bl);
+//     shared_data()._robot->model().update();
+//     if (shared_data().verbose_print) std::cout << "Update robot model done!" << std::endl;
+//     
+//     // Get starting hand pose
+//     if (shared_data().current_hand == shared_data().rh_id)
+//     {
+// 	shared_data()._robot->model().getPose("RSoftHand", shared_data().start_hand_pose);
+// 	if (shared_data().verbose_print) std::cout << "Get starting pose from RIGHT HAND ok!" << std::endl;
+//     }
+//     else
+//     {
+// 	shared_data()._robot->model().getPose("LSoftHand", shared_data().start_hand_pose);
+// 	if (shared_data().verbose_print) std::cout << "Get starting pose from LEFT HAND ok!" << std::endl;
+//     }
+//     
+//     // Convert start hand pose (eigen) to geometry msg (pose)
+//     geometry_msgs::Pose geo_pose_start_hand_pose;
+//     tf::poseEigenToMsg (shared_data().start_hand_pose, geo_pose_start_hand_pose);
+//     
+//     // Convert geometry msg (pose) to geometry msg (pose stamped)
+//     geometry_msgs::PoseStamped geo_posestamped_start_hand_pose;
+//     geo_posestamped_start_hand_pose.pose = geo_pose_start_hand_pose;
     
     
     // =====================================================================================
     // Create the Cartesian trajectories - starting ...
     trajectory_utils::Cartesian start_traj;
     start_traj.distal_frame = "RSoftHand";
-    start_traj.frame = geo_posestamped_start_hand_pose;
+    start_traj.frame = *shared_data().pst_last_rh_pose;
     
     
     // Create the Cartesian trajectories - ending ...

@@ -77,8 +77,10 @@ namespace myfsm{
 	
 	ros::Publisher _pub_rb_lh_grasp_pose;
 	ros::Publisher _pub_rb_lh_pregrasp_pose;
-	
+	    
 	ros::Publisher _pub_rb_rh_raise_pose;
+	
+	ros::Publisher _pub_rb_last_rh_pose;
 	
 	
 	ros::Publisher _pub_grasp_plugin_rh; // grasp plugin for right hand
@@ -95,7 +97,7 @@ namespace myfsm{
 	Eigen::VectorXd _q0;
       
 	
-	Eigen::Affine3d start_hand_pose; // keep starting pose of left hand or right hand
+	Eigen::Affine3d ei_start_rh_pose, ei_start_lh_pose; // keep starting pose of left hand or right hand
 	
 	// Command string for reading poses
 	//std::string pose_cmd_ = "hose_pose";
@@ -106,6 +108,9 @@ namespace myfsm{
 	
 	// grasp pose
 	geometry_msgs::PoseStamped::ConstPtr grasp_pose, pregrasp_pose, raise_pose;  // must use ConstPtr, not Ptr
+	
+	// last right hand, left hand pose
+	geometry_msgs::PoseStamped::ConstPtr pst_last_rh_pose, pst_last_lf_pose;
 	
 	// ros topic for 3D pose of objects (in camera frame) - for right hand, left hand
 	const std::string vs_rh_obj_pose_3D = "vs_rh_obj_pose_3D";  // MUST BE THE SAME IN: pub_rh_obj_pose_3D = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_obj_pose_3D", 1);
