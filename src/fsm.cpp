@@ -135,24 +135,26 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
     
     
     // Convert start hand pose (eigen) to geometry msg (pose)
-    geometry_msgs::Pose geo_pose_start_rh_pose;
+    geometry_msgs::Pose geo_pose_start_rh_pose, geo_pose_start_lh_pose;
     tf::poseEigenToMsg (shared_data().ei_start_rh_pose, geo_pose_start_rh_pose);
+    tf::poseEigenToMsg (shared_data().ei_start_lh_pose, geo_pose_start_lh_pose);
     
     // Convert geometry msg (pose) to geometry msg (pose stamped)
-    geometry_msgs::PoseStamped geo_posestamped_start_rh_pose;
+    geometry_msgs::PoseStamped geo_posestamped_start_rh_pose, geo_posestamped_start_lh_pose;
     geo_posestamped_start_rh_pose.pose = geo_pose_start_rh_pose;
+    geo_posestamped_start_lh_pose.pose = geo_pose_start_lh_pose;
     
     geo_posestamped_start_rh_pose.header.frame_id = shared_data().world_frame; // MUST SET THE HEADER TO world_frame - getPose() return in world frame
+    geo_posestamped_start_lh_pose.header.frame_id = shared_data().world_frame; // MUST SET THE HEADER TO world_frame - getPose() return in world frame
     
-    // update last rh pose
+    // update last rh pose, last lh pose
     shared_data().pst_last_rh_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_start_rh_pose));
-    // publish last rh pose
+    shared_data().pst_last_lh_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_start_lh_pose));
+    // publish last rh pose, last lh pose
     shared_data()._pub_rb_last_rh_pose.publish(geo_posestamped_start_rh_pose);
-    std::cout << "Publishing the last right hand pose ..." << std::endl;
-    
-    //TODO: Left Hand
-    
-
+    shared_data()._pub_rb_last_lh_pose.publish(geo_posestamped_start_lh_pose);
+    std::cout << "Publishing the last right hand + last left hand pose ..." << std::endl;
+   
     /////////////////////////////////////////////////////////////////////////////////////////
     
     
@@ -163,10 +165,15 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
     {
 	//shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_rh_obj_pose_3D);
 	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_rh_obj_pose_3D_FAKE); // got fake pose - to debug
-	if (shared_data().verbose_print) std::cout << "GOT MESSAGE FROM vs_rh_grasp_topic_3D" << std::endl;
+	if (shared_data().verbose_print) std::cout << "GOT MESSAGE for RIGH HAND from vs_rh_grasp_topic_3D" << std::endl;
     }
     else
-	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_lh_obj_pose_3D);
+    {
+	//shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_lh_obj_pose_3D);
+	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_lh_obj_pose_3D_FAKE); // got fake pose - to debug
+	if (shared_data().verbose_print) std::cout << "GOT MESSAGE for LEFT HAND from vs_lh_grasp_topic_3D" << std::endl;
+    }
+    
     
     // convert object pose_stamped --> pose --> eigen
     tf::Transform tf_cam_to_obj;
@@ -218,7 +225,7 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
     
     
     //temp_pose_stamp.header.frame_id = "world_odom";
-    geo_posestamped_grasp_pose.header.frame_id = shared_data().world_frame;
+    geo_posestamped_grasp_pose.header.frame_id = shared_data().world_frame; // MUST SET
     // need to cast the variable as the pointer --> reverse later!!!
     shared_data().grasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_grasp_pose));
      
@@ -231,11 +238,15 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
     
     // find PREGRASP pose ----------------------------------------------------------
     geometry_msgs::PoseStamped geo_posestamped_pregrasp_pose;
-    geo_posestamped_pregrasp_pose = *shared_data().grasp_pose; // same location, same orientation
+    geo_posestamped_pregrasp_pose = *shared_data().grasp_pose; // same location, same orientation, same header.frame_id
     geo_posestamped_pregrasp_pose.pose.position.x -= 0.1;  // (x from the robot to further)  - close to the robot
-    geo_posestamped_pregrasp_pose.pose.position.y -= 0.1;  // (y from right to left) - far to the right
+    if (shared_data().current_hand == shared_data().rh_id)
+	geo_posestamped_pregrasp_pose.pose.position.y -= 0.1;  // (y from right to left) - far to the right
+    else
+	geo_posestamped_pregrasp_pose.pose.position.y += 0.1;  // (y from right to left) - far to the left
     geo_posestamped_pregrasp_pose.pose.position.z += 0.0;  // (z is up) no change --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
     shared_data().pregrasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_pregrasp_pose)); // construct the pregrasp pose
+    
     // publish obj pregrasp_pose message in world frame
     if (shared_data().current_hand == shared_data().rh_id)
     {
@@ -251,7 +262,10 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
     geometry_msgs::PoseStamped geo_posestamped_raise_pose;
     geo_posestamped_raise_pose = *shared_data().grasp_pose; // same location, same orientation
     geo_posestamped_raise_pose.pose.position.x -= 0.1;  // (x from the robot to further) - close to the robot
-    geo_posestamped_raise_pose.pose.position.y -= 0.1;  // (y from right to left) - far to the right
+    if (shared_data().current_hand == shared_data().rh_id)
+	geo_posestamped_raise_pose.pose.position.y -= 0.1;  // (y from right to left) - far to the right // for right hand
+    else
+	geo_posestamped_raise_pose.pose.position.y += 0.1;  // (y from right to left) - far to the left // for left hand
     geo_posestamped_raise_pose.pose.position.z += 0.1;  // (z is up) --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
     shared_data().raise_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_raise_pose)); // construct the pregrasp pose
     // publish obj pregrasp_pose message in world frame
@@ -262,7 +276,7 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
 	    std::cout << "Publishing rh_raise_pose" << std::endl;
     }
     else
-	shared_data()._pub_rb_rh_raise_pose.publish(geo_posestamped_raise_pose); // CHANGE to left hand LATER !!!!!!!
+	shared_data()._pub_rb_lh_raise_pose.publish(geo_posestamped_raise_pose); // CHANGE to left hand LATER !!!!!!!
 	
 	
     /////////////////////////////////////////////////////////////
@@ -734,7 +748,7 @@ void myfsm::Ungrasp::exit ()
 ////////////////////////////
 //Begin EMPTY State
 void myfsm::Raise::react (const XBot::FSM::Event& e)
-{
+{	
     std::cout << "Raise react" << std::endl;
 }
 
@@ -774,13 +788,20 @@ void myfsm::Raise::entry (const XBot::FSM::Message& msg)
     // =====================================================================================
     // Create the Cartesian trajectories - starting ...
     trajectory_utils::Cartesian start_traj;
-    start_traj.distal_frame = "RSoftHand";
+    if (shared_data().current_hand == shared_data().rh_id)
+	start_traj.distal_frame = "RSoftHand";
+    else
+	start_traj.distal_frame = "LSoftHand";
     start_traj.frame = *shared_data().pst_last_rh_pose;
     
     
     // Create the Cartesian trajectories - ending ...
     trajectory_utils::Cartesian end;
-    end.distal_frame = "RSoftHand";
+    if (shared_data().current_hand == shared_data().rh_id)
+	end.distal_frame = "RSoftHand";	
+    else
+	end.distal_frame = "LSoftHand";	
+    
     //end.frame = r_end_hand_pose_stamped;
     end.frame = *shared_data().raise_pose; // to test hardcode pose; _grasp_pose is a pointer --> need *
 
@@ -905,9 +926,17 @@ void myfsm::Move::entry (const XBot::FSM::Message& msg)
     // call the service
     shared_data()._client.call(srv);
     
-    // update the last right hand pose to the grasp_pose
-    shared_data().pst_last_rh_pose = shared_data().grasp_pose;
-    shared_data()._pub_rb_last_rh_pose.publish(*shared_data().pst_last_rh_pose);
+    if (shared_data().current_hand == shared_data().rh_id)
+    {	
+	// update the last right hand pose to the grasp_pose
+	shared_data().pst_last_rh_pose = shared_data().grasp_pose;
+	shared_data()._pub_rb_last_rh_pose.publish(*shared_data().pst_last_rh_pose);
+    }
+    else
+    {
+	shared_data().pst_last_lh_pose = shared_data().grasp_pose;
+	shared_data()._pub_rb_last_lh_pose.publish(*shared_data().pst_last_lh_pose);
+    }
     
 }
 
