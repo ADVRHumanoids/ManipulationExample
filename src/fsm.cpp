@@ -123,11 +123,13 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
     
     // update last rh pose
     shared_data().pst_last_rh_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_start_rh_pose));
+    // publish last rh pose
+    shared_data()._pub_rb_last_rh_pose.publish(geo_posestamped_start_rh_pose);
+    std::cout << "Publishing the last right hand pose ..." << std::endl;
     
     //TODO: Left Hand
     
-    shared_data()._pub_rb_last_rh_pose.publish(geo_posestamped_start_rh_pose);
-    std::cout << "Publishing the last right hand pose ..." << std::endl;
+
     /////////////////////////////////////////////////////////////////////////////////////////
     
     
@@ -284,7 +286,7 @@ void myfsm::Prereach::react (const XBot::FSM::Event& e)
 
 void myfsm::Prereach::entry (const XBot::FSM::Message& msg)
 {
-    //
+    
     // =====================================================================================
     // Create the Cartesian trajectories - starting ...
     trajectory_utils::Cartesian start_traj;
@@ -301,7 +303,7 @@ void myfsm::Prereach::entry (const XBot::FSM::Message& msg)
     // define the first segment
     trajectory_utils::segment s1;
     s1.type.data = 0;        // min jerk traj
-    s1.T.data = 10.0;         // traj duration 1 second      
+    s1.T.data = 5.0;         // traj duration 1 second      
     s1.start = start_traj;   // start pose
     s1.end = end;            // end pose 
 
@@ -318,6 +320,10 @@ void myfsm::Prereach::entry (const XBot::FSM::Message& msg)
 
     // call the service
     shared_data()._client.call(srv);
+    
+    // update the last right hand pose to the pregrasp pose
+    shared_data().pst_last_rh_pose = shared_data().pregrasp_pose;
+    shared_data()._pub_rb_last_rh_pose.publish(*shared_data().pst_last_rh_pose);
     
 }
 
@@ -518,6 +524,9 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg)
     // call the service
     shared_data()._client.call(srv);
 
+    // update the last right hand pose to the grasp pose
+    shared_data().pst_last_rh_pose = shared_data().grasp_pose;
+    shared_data()._pub_rb_last_rh_pose.publish(*shared_data().pst_last_rh_pose);
     
 //     // =====================================================================================
 //     //  2 SEGMENTS
@@ -769,6 +778,10 @@ void myfsm::Raise::entry (const XBot::FSM::Message& msg)
 
     // call the service
     shared_data()._client.call(srv);
+    
+    // update the last right hand pose to the pregrasp pose
+    shared_data().pst_last_rh_pose = shared_data().raise_pose;
+    shared_data()._pub_rb_last_rh_pose.publish(*shared_data().pst_last_rh_pose);
     
 }
 
