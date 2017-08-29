@@ -216,12 +216,24 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
 //     geo_posestamped_grasp_pose.pose.orientation.y = 0;
 //     geo_posestamped_grasp_pose.pose.orientation.z = 0;
 //     geo_posestamped_grasp_pose.pose.orientation.w = 1; // No rotation - should be the same with world frame
-				    
-    geo_posestamped_grasp_pose.pose.orientation.x = 0;
-    geo_posestamped_grasp_pose.pose.orientation.y = -0.7071;  // rotate 270 along y axis - "sidegrasp" pose
-    geo_posestamped_grasp_pose.pose.orientation.z = 0;
-    geo_posestamped_grasp_pose.pose.orientation.w = 0.7071; 
-
+				
+    if (shared_data().current_grasp_strategy == shared_data().side_grasp)
+    {
+	geo_posestamped_grasp_pose.pose.orientation.x = 0;
+	geo_posestamped_grasp_pose.pose.orientation.y = -0.7071;  // rotate 270 along y axis - "sidegrasp" pose
+	geo_posestamped_grasp_pose.pose.orientation.z = 0;
+	geo_posestamped_grasp_pose.pose.orientation.w = 0.7071; 
+    }
+    else
+    {	// topgrasp
+	//Eigen::Quaterniond q1(0.7071, 0, -0.7071, 0); // w, x, y, z // first rotate to sidegrasp
+	//Eigen::Quaterniond q2(w, x, y, z); // w, x, y, z // rotate 90 around z axis
+	
+	geo_posestamped_grasp_pose.pose.orientation.x = -0.5; // magic number! rotate 2 quaternions to get this
+	geo_posestamped_grasp_pose.pose.orientation.y = -0.5;  
+	geo_posestamped_grasp_pose.pose.orientation.z = 0.5;
+	geo_posestamped_grasp_pose.pose.orientation.w = 0.5;  
+    }
     
     
     //temp_pose_stamp.header.frame_id = "world_odom";
@@ -239,12 +251,29 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
     // find PREGRASP pose ----------------------------------------------------------
     geometry_msgs::PoseStamped geo_posestamped_pregrasp_pose;
     geo_posestamped_pregrasp_pose = *shared_data().grasp_pose; // same location, same orientation, same header.frame_id
-    geo_posestamped_pregrasp_pose.pose.position.x -= 0.1;  // (x from the robot to further)  - close to the robot
-    if (shared_data().current_hand == shared_data().rh_id)
-	geo_posestamped_pregrasp_pose.pose.position.y -= 0.1;  // (y from right to left) - far to the right
+    
+    if (shared_data().current_grasp_strategy == shared_data().side_grasp)
+    {   
+	// find pregrasp pose for side grasp
+	geo_posestamped_pregrasp_pose.pose.position.x -= 0.1;  // (x from the robot to further)  - close to the robot
+	if (shared_data().current_hand == shared_data().rh_id)
+	    geo_posestamped_pregrasp_pose.pose.position.y -= 0.1;  // (y from right to left) - far to the right
+	else
+	    geo_posestamped_pregrasp_pose.pose.position.y += 0.1;  // (y from right to left) - far to the left
+	geo_posestamped_pregrasp_pose.pose.position.z += 0.0;  // (z is up) no change --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
+    }
     else
-	geo_posestamped_pregrasp_pose.pose.position.y += 0.1;  // (y from right to left) - far to the left
-    geo_posestamped_pregrasp_pose.pose.position.z += 0.0;  // (z is up) no change --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
+    {
+	// find pregrasp pose for top grasp
+	geo_posestamped_pregrasp_pose.pose.position.x -= 0.1;  // (x from the robot to further)  - close to the robot
+	if (shared_data().current_hand == shared_data().rh_id)
+	    geo_posestamped_pregrasp_pose.pose.position.y -= 0.05;  // (y from right to left) - far to the right
+	else
+	    geo_posestamped_pregrasp_pose.pose.position.y += 0.05;  // (y from right to left) - far to the left
+	geo_posestamped_pregrasp_pose.pose.position.z += 0.1;  // (z is up) --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
+    }
+    
+    // asign to pregrasp pose
     shared_data().pregrasp_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_pregrasp_pose)); // construct the pregrasp pose
     
     // publish obj pregrasp_pose message in world frame

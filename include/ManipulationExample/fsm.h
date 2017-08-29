@@ -126,7 +126,8 @@ namespace myfsm{
 	const std::string top_grasp = "topgrasp";    // grasping type: topgrasp --> grasp from top to bottom
 	
 	std::string current_hand = rh_id;  // current hand in use - default is right hand
-	std::string current_grasp_strategy = side_grasp; // current grasp strategy - default is side grasp
+	//std::string current_grasp_strategy = side_grasp; // current grasp strategy - default is side grasp
+	std::string current_grasp_strategy = top_grasp; // current grasp strategy - default is topgrasp
 	
 	// debug 
 	bool verbose_print = true;
