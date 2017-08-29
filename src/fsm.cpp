@@ -57,7 +57,23 @@ void myfsm::Home::run (double time, double period)
 	std::string str_cmd = shared_data().current_command.str();
 	std::cout << "Received command: " << str_cmd << std::endl;
 	
-	// TBD
+	// update active hand to right hand
+	if (!str_cmd.compare(shared_data().rh_id))
+	    shared_data().current_hand = shared_data().rh_id;
+	
+	// update active hand to left hand
+	if (!str_cmd.compare(shared_data().lh_id))
+	    shared_data().current_hand = shared_data().lh_id;
+	
+	// update grasping strategy
+	if (!str_cmd.compare(shared_data().top_grasp))
+	    shared_data().current_grasp_strategy = shared_data().top_grasp;
+	
+	if (!str_cmd.compare(shared_data().side_grasp))
+	    shared_data().current_grasp_strategy = shared_data().side_grasp;
+	
+		
+	// transit state ...
 	if (!str_cmd.compare("reach"))
 	    transit("Reach");
 	
@@ -837,17 +853,27 @@ void myfsm::Move::entry (const XBot::FSM::Message& msg)
     //     //  2 SEGMENTS
     // Create the Cartesian trajectories - starting ...
     trajectory_utils::Cartesian start_traj;
-    start_traj.distal_frame = "RSoftHand";
+    if (shared_data().current_hand == shared_data().rh_id)
+	start_traj.distal_frame = "RSoftHand";
+    else
+	start_traj.distal_frame = "LSoftHand";
     start_traj.frame = *shared_data().pst_last_rh_pose;
 
     // Create the Cartesian trajectories - pregrasping ...
     trajectory_utils::Cartesian pregrasp_traj;
-    pregrasp_traj.distal_frame = "RSoftHand";
+    if (shared_data().current_hand == shared_data().rh_id)
+	start_traj.distal_frame = "RSoftHand";
+    else
+	start_traj.distal_frame = "LSoftHand";
     pregrasp_traj.frame = *shared_data().pregrasp_pose;
    
+    
     // Create the Cartesian trajectories - ending ...
     trajectory_utils::Cartesian end_traj;
-    end_traj.distal_frame = "RSoftHand";
+    if (shared_data().current_hand == shared_data().rh_id)
+	start_traj.distal_frame = "RSoftHand";
+    else
+	start_traj.distal_frame = "LSoftHand"; 
     //end.frame = r_end_hand_pose_stamped;
     end_traj.frame = *shared_data().grasp_pose; // to test hardcode pose; rh_grasp_pose is a pointer --> need *
 
