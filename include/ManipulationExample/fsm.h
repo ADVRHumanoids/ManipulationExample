@@ -84,6 +84,7 @@ namespace myfsm{
 	ros::Publisher _pub_rb_last_rh_pose;
 	ros::Publisher _pub_rb_last_lh_pose;
 	
+	ros::Publisher _pub_rb_contain_pose;
 	
 	ros::Publisher _pub_grasp_plugin_rh; // grasp plugin for right hand
 	ros::Publisher _pub_grasp_plugin_lh; 
@@ -109,7 +110,7 @@ namespace myfsm{
 	const std::string left_camera_frame = "multisense/left_camera_optical_frame";
 	
 	// grasp pose
-	geometry_msgs::PoseStamped::ConstPtr grasp_pose, pregrasp_pose, raise_pose;  // must use ConstPtr, not Ptr
+	geometry_msgs::PoseStamped::ConstPtr grasp_pose, pregrasp_pose, raise_pose, contain_pose;  // must use ConstPtr, not Ptr
 	
 	// last right hand, left hand pose
 	geometry_msgs::PoseStamped::ConstPtr pst_last_rh_pose, pst_last_lh_pose;
@@ -119,15 +120,17 @@ namespace myfsm{
 	const std::string vs_lh_obj_pose_3D = "vs_lh_obj_pose_3D";
 	const std::string vs_rh_obj_pose_3D_FAKE = "vs_rh_obj_pose_3D_FAKE";  // fake pose - for debugging
 	const std::string vs_lh_obj_pose_3D_FAKE = "vs_lh_obj_pose_3D_FAKE";  // fake pose for left hand
+	const std::string vs_contain_pose_3D = "vs_contain_pose_3D";
 	
 	const std::string rh_id = "rh"; // id for choosing right hand
 	const std::string lh_id = "lh";
 	const std::string side_grasp = "sidegrasp"; // grasping type: sidegrasp --> move hand parallel to homing pose
 	const std::string top_grasp = "topgrasp";    // grasping type: topgrasp --> grasp from top to bottom
 	
-	std::string current_hand = rh_id;  // current hand in use - default is right hand
-	//std::string current_grasp_strategy = side_grasp; // current grasp strategy - default is side grasp
-	std::string current_grasp_strategy = top_grasp; // current grasp strategy - default is topgrasp
+	//std::string current_hand = rh_id;  // current hand in use - default is right hand
+	std::string current_hand = lh_id;  // current hand in use - default is right hand
+	std::string current_grasp_strategy = side_grasp; // current grasp strategy - default is side grasp
+	//std::string current_grasp_strategy = top_grasp; // current grasp strategy - default is topgrasp
 	
 	// debug 
 	bool verbose_print = true;

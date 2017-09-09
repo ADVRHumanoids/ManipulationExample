@@ -160,6 +160,7 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     fsm.shared_data()._pub_rb_lh_raise_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_lh_raise_pose", 1);
     fsm.shared_data()._pub_rb_last_rh_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_last_rh_pose", 1);
     fsm.shared_data()._pub_rb_last_lh_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_last_lh_pose", 1);
+    fsm.shared_data()._pub_rb_contain_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_contain_pose", 1);
     
     fsm.shared_data()._pub_grasp_plugin_rh = fsm.shared_data()._nh->advertise<std_msgs::String>("/grasp/RWrMot3/goalGrasp",1);
     fsm.shared_data()._pub_grasp_plugin_lh = fsm.shared_data()._nh->advertise<std_msgs::String>("/grasp/LWrMot3/goalGrasp",1);

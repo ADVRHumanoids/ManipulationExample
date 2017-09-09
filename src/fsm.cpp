@@ -163,14 +163,14 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
     // wait for vision message
     if (shared_data().current_hand == shared_data().rh_id)
     {
-	//shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_rh_obj_pose_3D);
-	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_rh_obj_pose_3D_FAKE); // got fake pose - to debug
+	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_rh_obj_pose_3D);
+	//shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_rh_obj_pose_3D_FAKE); // got fake pose - to debug
 	if (shared_data().verbose_print) std::cout << "GOT MESSAGE for RIGH HAND from vs_rh_grasp_topic_3D" << std::endl;
     }
     else
     {
-	//shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_lh_obj_pose_3D);
-	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_lh_obj_pose_3D_FAKE); // got fake pose - to debug
+	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_lh_obj_pose_3D);
+	//shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_lh_obj_pose_3D_FAKE); // got fake pose - to debug
 	if (shared_data().verbose_print) std::cout << "GOT MESSAGE for LEFT HAND from vs_lh_grasp_topic_3D" << std::endl;
     }
     
@@ -223,6 +223,13 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
 	geo_posestamped_grasp_pose.pose.orientation.y = -0.7071;  // rotate 270 along y axis - "sidegrasp" pose
 	geo_posestamped_grasp_pose.pose.orientation.z = 0;
 	geo_posestamped_grasp_pose.pose.orientation.w = 0.7071; 
+	
+	
+	// add a padding to final pose
+	if (shared_data().current_hand == shared_data().rh_id)
+	    geo_posestamped_grasp_pose.pose.position.y -= 0.05; // y from right to left - far a bit to the right
+	else
+	    geo_posestamped_grasp_pose.pose.position.y += 0.05; // y from right to left - far a bit to the left - for left hand
     }
     else
     {	// topgrasp
@@ -261,6 +268,7 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
 	else
 	    geo_posestamped_pregrasp_pose.pose.position.y += 0.1;  // (y from right to left) - far to the left
 	geo_posestamped_pregrasp_pose.pose.position.z += 0.0;  // (z is up) no change --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
+	
     }
     else
     {
@@ -309,9 +317,44 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
 	
 	
     /////////////////////////////////////////////////////////////
-    // GET CURRENT RIGHT HAND POSE AND Transform --> TO HAVE GOOD FAKE TEST POSE
+    // get contain pose
+    shared_data ().contain_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_contain_pose_3D);
     
-	
+    // convert object pose_stamped --> pose --> eigen
+    tf::Transform tf_cam_to_contain;
+    geometry_msgs::Pose temp_contain;
+    temp_contain.position = shared_data().contain_pose->pose.position;
+    temp_contain.orientation = shared_data().contain_pose->pose.orientation;
+    tf::poseMsgToTF(temp_contain, tf_cam_to_contain);
+    geometry_msgs::Transform geo_trs_cam_to_contain;
+    tf::transformTFToMsg(tf_cam_to_contain, geo_trs_cam_to_contain);
+    Eigen::Affine3d eigen_cam_to_contain;
+    tf::transformMsgToEigen(geo_trs_cam_to_contain, eigen_cam_to_contain);
+    
+    // get final world to object transform
+    Eigen::Affine3d eigen_world_to_contain;
+    eigen_world_to_contain = eigen_world_to_cam * eigen_cam_to_contain;
+    
+    // convert eign to msg pose
+    geometry_msgs::Pose geo_pose_contain_pose;
+    tf::poseEigenToMsg (eigen_world_to_contain, geo_pose_contain_pose);      
+    
+    // keep the position only
+    geometry_msgs::PoseStamped geo_posestamped_contain_pose;
+    geo_posestamped_contain_pose.pose.position = geo_pose_contain_pose.position;
+    geo_posestamped_contain_pose.pose.position.z += 0.2;  // (z is up) ---> SET HIGHER THAN ORIGINAL
+    geo_posestamped_contain_pose.pose.orientation.x = 0;
+    geo_posestamped_contain_pose.pose.orientation.y = -0.7071;  // rotate 270 along y axis - "sidegrasp" pose
+    geo_posestamped_contain_pose.pose.orientation.z = 0;
+    geo_posestamped_contain_pose.pose.orientation.w = 0.7071; 
+    
+    geo_posestamped_contain_pose.header.frame_id = shared_data().world_frame; // MUST SET
+    // need to cast the variable as the pointer --> reverse later!!!
+    shared_data().contain_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_contain_pose));
+     
+    // publish contain pose message in world frame
+    shared_data()._pub_rb_contain_pose.publish(geo_posestamped_contain_pose);
+    
     
 }
 
@@ -359,13 +402,24 @@ void myfsm::Prereach::entry (const XBot::FSM::Message& msg)
     // =====================================================================================
     // Create the Cartesian trajectories - starting ...
     trajectory_utils::Cartesian start_traj;
-    start_traj.distal_frame = "RSoftHand";
-    start_traj.frame = *shared_data().pst_last_rh_pose;
+    trajectory_utils::Cartesian end;
     
+    if (shared_data().current_hand == shared_data().rh_id)
+    {
+	start_traj.distal_frame = "RSoftHand";
+	start_traj.frame = *shared_data().pst_last_rh_pose;
+	end.distal_frame = "RSoftHand";
+    }
+    else
+    {
+	start_traj.distal_frame = "LSoftHand";
+	start_traj.frame = *shared_data().pst_last_lh_pose;
+	end.distal_frame = "LSoftHand";
+    }
     
     // Create the Cartesian trajectories - ending ...
-    trajectory_utils::Cartesian end;
-    end.distal_frame = "RSoftHand";
+    
+    
     //end.frame = r_end_hand_pose_stamped;
     end.frame = *shared_data().pregrasp_pose; // to test hardcode pose; _grasp_pose is a pointer --> need *
 
@@ -391,8 +445,16 @@ void myfsm::Prereach::entry (const XBot::FSM::Message& msg)
     shared_data()._client.call(srv);
     
     // update the last right hand pose to the pregrasp pose
-    shared_data().pst_last_rh_pose = shared_data().pregrasp_pose;
-    shared_data()._pub_rb_last_rh_pose.publish(*shared_data().pst_last_rh_pose);
+    if (shared_data().current_hand == shared_data().rh_id)
+    {	
+	shared_data().pst_last_rh_pose = shared_data().pregrasp_pose;
+	shared_data()._pub_rb_last_rh_pose.publish(*shared_data().pst_last_rh_pose);
+    }
+    else
+    {
+	shared_data().pst_last_lh_pose = shared_data().pregrasp_pose;
+	shared_data()._pub_rb_last_lh_pose.publish(*shared_data().pst_last_lh_pose);
+    }
     
 }
 
@@ -563,13 +625,25 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg)
     // =====================================================================================
     // Create the Cartesian trajectories - starting ...
     trajectory_utils::Cartesian start_traj;
-    start_traj.distal_frame = "RSoftHand";
-    start_traj.frame = *shared_data().pst_last_rh_pose; // CHECK LATER
+    trajectory_utils::Cartesian end;
+    
+    if (shared_data().current_hand == shared_data().rh_id)
+    {
+	start_traj.distal_frame = "RSoftHand";
+	start_traj.frame = *shared_data().pst_last_rh_pose; // CHECK LATER
+	end.distal_frame = "RSoftHand";
+    }
+    else
+    {
+	start_traj.distal_frame = "LSoftHand";
+	start_traj.frame = *shared_data().pst_last_lh_pose; // CHECK LATER
+	end.distal_frame = "LSoftHand";
+    }
     
     
     // Create the Cartesian trajectories - ending ...
-    trajectory_utils::Cartesian end;
-    end.distal_frame = "RSoftHand";
+    
+    
     //end.frame = r_end_hand_pose_stamped;
     end.frame = *shared_data().grasp_pose; // to test hardcode pose; rh_grasp_pose is a pointer --> need *
 
@@ -594,8 +668,16 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg)
     shared_data()._client.call(srv);
 
     // update the last right hand pose to the grasp pose
-    shared_data().pst_last_rh_pose = shared_data().grasp_pose;
-    shared_data()._pub_rb_last_rh_pose.publish(*shared_data().pst_last_rh_pose);
+    if (shared_data().current_hand == shared_data().rh_id)
+    {
+	shared_data().pst_last_rh_pose = shared_data().grasp_pose;
+	shared_data()._pub_rb_last_rh_pose.publish(*shared_data().pst_last_rh_pose);
+    }
+    else
+    {
+	shared_data().pst_last_lh_pose = shared_data().grasp_pose;
+	shared_data()._pub_rb_last_lh_pose.publish(*shared_data().pst_last_lh_pose);
+    }
     
 //     // =====================================================================================
 //     //  2 SEGMENTS
@@ -687,8 +769,16 @@ void myfsm::Grasp::entry (const XBot::FSM::Message& msg)
 {
     ADVR_ROS::advr_grasp_control_srv srv;
   
-    srv.request.right_grasp = 0.9; // use right hand
-    srv.request.left_grasp = 0.0;
+    if (shared_data().current_hand == shared_data().rh_id)
+    {
+	srv.request.right_grasp = 0.9; // use right hand
+	srv.request.left_grasp = 0.0;
+    }
+    else
+    {
+	srv.request.right_grasp = 0.0; // use right hand
+	srv.request.left_grasp = 0.9;
+    }
     
     // call the service
     shared_data()._grasp_client.call(srv);  
@@ -818,11 +908,15 @@ void myfsm::Raise::entry (const XBot::FSM::Message& msg)
     // Create the Cartesian trajectories - starting ...
     trajectory_utils::Cartesian start_traj;
     if (shared_data().current_hand == shared_data().rh_id)
+    {
 	start_traj.distal_frame = "RSoftHand";
+	start_traj.frame = *shared_data().pst_last_rh_pose;
+    }
     else
+    {
 	start_traj.distal_frame = "LSoftHand";
-    start_traj.frame = *shared_data().pst_last_rh_pose;
-    
+	start_traj.frame = *shared_data().pst_last_lh_pose;
+    }
     
     // Create the Cartesian trajectories - ending ...
     trajectory_utils::Cartesian end;
@@ -856,8 +950,17 @@ void myfsm::Raise::entry (const XBot::FSM::Message& msg)
     shared_data()._client.call(srv);
     
     // update the last right hand pose to the pregrasp pose
-    shared_data().pst_last_rh_pose = shared_data().raise_pose;
-    shared_data()._pub_rb_last_rh_pose.publish(*shared_data().pst_last_rh_pose);
+    if (shared_data().current_hand == shared_data().rh_id)
+    {
+	shared_data().pst_last_rh_pose = shared_data().raise_pose;
+	shared_data()._pub_rb_last_rh_pose.publish(*shared_data().pst_last_rh_pose);
+    }
+    else
+    {
+	shared_data().pst_last_lh_pose = shared_data().raise_pose;
+	shared_data()._pub_rb_last_lh_pose.publish(*shared_data().pst_last_lh_pose);
+	
+    }
     
 }
 
