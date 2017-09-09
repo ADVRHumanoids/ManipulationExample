@@ -157,6 +157,9 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
    
     /////////////////////////////////////////////////////////////////////////////////////////
     
+    // keet first right hand, left hand pose
+    shared_data().pst_first_rh_pose = shared_data().pst_last_rh_pose;
+    shared_data().pst_first_lh_pose = shared_data().pst_last_lh_pose;
     
     
     //// define the end frame - from vision module
@@ -227,9 +230,9 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
 	
 	// add a padding to final pose
 	if (shared_data().current_hand == shared_data().rh_id)
-	    geo_posestamped_grasp_pose.pose.position.y -= 0.05; // y from right to left - far a bit to the right
+	    geo_posestamped_grasp_pose.pose.position.y -= 0.08; // y from right to left - far a bit to the right
 	else
-	    geo_posestamped_grasp_pose.pose.position.y += 0.05; // y from right to left - far a bit to the left - for left hand
+	    geo_posestamped_grasp_pose.pose.position.y += 0.08; // y from right to left - far a bit to the left - for left hand
     }
     else
     {	// topgrasp
@@ -342,7 +345,10 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
     // keep the position only
     geometry_msgs::PoseStamped geo_posestamped_contain_pose;
     geo_posestamped_contain_pose.pose.position = geo_pose_contain_pose.position;
-    geo_posestamped_contain_pose.pose.position.z += 0.2;  // (z is up) ---> SET HIGHER THAN ORIGINAL
+    geo_posestamped_contain_pose.pose.position.x -= 0.1;  // (x from the robot to further) - close to the robot
+    geo_posestamped_contain_pose.pose.position.y -= 0.05;  // (y from right to left) - far to the right // for right hand
+    geo_posestamped_contain_pose.pose.position.z += 0.25;  // (z is up) ---> SET HIGHER THAN ORIGINAL
+   
     geo_posestamped_contain_pose.pose.orientation.x = 0;
     geo_posestamped_contain_pose.pose.orientation.y = -0.7071;  // rotate 270 along y axis - "sidegrasp" pose
     geo_posestamped_contain_pose.pose.orientation.z = 0;
@@ -474,6 +480,9 @@ void myfsm::Prereach::run (double time, double period)
 	
 	if (!str_cmd.compare("home"))
 	    transit("Home");
+	
+	if (!str_cmd.compare("reset"))
+	    transit("Reset");
     }
     
 }
@@ -744,6 +753,8 @@ void myfsm::Reach::run(double time, double period)
 	if (!str_cmd.compare("grasp"))
 	    transit("Grasp");
 	
+	if (!str_cmd.compare("reset"))
+	    transit("Reset");
     }
 }
 
@@ -804,6 +815,9 @@ void myfsm::Grasp::run (double time, double period)
 		
 	if (!str_cmd.compare("raise"))
 	    transit("Raise");
+	
+	if (!str_cmd.compare("reset"))
+	    transit("Reset");
     }
     
 }
@@ -853,6 +867,9 @@ void myfsm::Ungrasp::run (double time, double period)
 	
 	if (!str_cmd.compare("home"))
 	    transit("Home");
+	
+	if (!str_cmd.compare("reset"))
+	    transit("Reset");
     }
     
 }
@@ -980,6 +997,12 @@ void myfsm::Raise::run (double time, double period)
 	
 	if (!str_cmd.compare("home"))
 	    transit("Home");
+	
+	if (!str_cmd.compare("carry"))
+	    transit("Carry");
+	
+	if (!str_cmd.compare("reset"))
+	    transit("Reset");
     }
     
 }
@@ -1094,6 +1117,10 @@ void myfsm::Move::run (double time, double period)
 	
 	if (!str_cmd.compare("home"))
 	    transit("Home");
+	
+	if (!str_cmd.compare("reset"))
+	    transit("Reset");
+	
     }
     
 }
@@ -1105,6 +1132,212 @@ void myfsm::Move::exit ()
 //End Move State
 
 
+
+////////////////////////////
+//Begin Carry State
+void myfsm::Carry::react (const XBot::FSM::Event& e)
+{
+    std::cout << "Carry react" << std::endl;
+}
+
+void myfsm::Carry::entry (const XBot::FSM::Message& msg)
+{
+    // =====================================================================================
+    // Create the Cartesian trajectories - starting ...
+    trajectory_utils::Cartesian start_traj;
+    if (shared_data().current_hand == shared_data().rh_id)
+    {
+	start_traj.distal_frame = "RSoftHand";
+	start_traj.frame = *shared_data().pst_last_rh_pose;
+    }
+    else
+    {
+	start_traj.distal_frame = "LSoftHand";
+	start_traj.frame = *shared_data().pst_last_lh_pose;
+    }
+    
+    // Create the Cartesian trajectories - ending ...
+    trajectory_utils::Cartesian end;
+    if (shared_data().current_hand == shared_data().rh_id)
+	end.distal_frame = "RSoftHand";	
+    else
+	end.distal_frame = "LSoftHand";	
+    
+    //end.frame = r_end_hand_pose_stamped;
+    end.frame = *shared_data().contain_pose; // to test hardcode pose; _grasp_pose is a pointer --> need *
+
+    // define the first segment
+    trajectory_utils::segment s1;
+    s1.type.data = 0;        // min jerk traj
+    s1.T.data = 5.0;         // traj duration 1 second      
+    s1.start = start_traj;   // start pose
+    s1.end = end;            // end pose 
+
+    // only one segment in this example
+    std::vector<trajectory_utils::segment> segments;
+    segments.push_back (s1);
+   
+
+    // prapere the advr_segment_control
+    ADVR_ROS::advr_segment_control srv;
+    srv.request.segment_trj.header.frame_id = shared_data ().world_frame;
+    srv.request.segment_trj.header.stamp = ros::Time::now();
+    srv.request.segment_trj.segments = segments;
+
+    // call the service
+    shared_data()._client.call(srv);
+    
+    // update the last right hand pose to the pregrasp pose
+    if (shared_data().current_hand == shared_data().rh_id)
+    {
+	shared_data().pst_last_rh_pose = shared_data().contain_pose;
+	shared_data()._pub_rb_last_rh_pose.publish(*shared_data().pst_last_rh_pose);
+    }
+    else
+    {
+	shared_data().pst_last_lh_pose = shared_data().contain_pose;
+	shared_data()._pub_rb_last_lh_pose.publish(*shared_data().pst_last_lh_pose);
+	
+    }
+    
+}
+
+void myfsm::Carry::run (double time, double period)
+{
+    std::cout << shared_data().str_seperator << std::endl;
+    std::cout << "State: CARRY RUN" << std::endl;
+    
+    // blocking reading: wait for a command
+    if(shared_data().command.read(shared_data().current_command))
+    {
+	std::string str_cmd = shared_data().current_command.str();
+	std::cout << "Received command: " << str_cmd << std::endl;
+		
+	if (!str_cmd.compare("home"))
+	    transit("Home");
+	
+	if (!str_cmd.compare("grasp"))
+	    transit("Grasp");
+	
+	if (!str_cmd.compare("ungrasp"))
+	    transit("Ungrasp");
+	
+	if (!str_cmd.compare("reset"))
+	    transit("Reset");
+    }
+    
+}
+
+void myfsm::Carry::exit ()
+{
+
+}
+//End Carry State
+
+
+////////////////////////////
+//Begin EMPTY State
+void myfsm::Reset::react (const XBot::FSM::Event& e)
+{
+    std::cout << "Reset react" << std::endl;
+}
+
+void myfsm::Reset::entry (const XBot::FSM::Message& msg)
+{
+    // =====================================================================================
+    // Create the Cartesian trajectories - starting ...
+    trajectory_utils::Cartesian start_traj;
+    if (shared_data().current_hand == shared_data().rh_id)
+    {
+	start_traj.distal_frame = "RSoftHand";
+	start_traj.frame = *shared_data().pst_last_rh_pose;
+    }
+    else
+    {
+	start_traj.distal_frame = "LSoftHand";
+	start_traj.frame = *shared_data().pst_last_lh_pose;
+    }
+    
+    // Create the Cartesian trajectories - ending ...
+    trajectory_utils::Cartesian end;
+    if (shared_data().current_hand == shared_data().rh_id)
+    {
+	end.distal_frame = "RSoftHand";	
+	end.frame = *shared_data().pst_first_rh_pose; // to test hardcode pose; _grasp_pose is a pointer --> need *
+    }
+    else
+    {
+	end.distal_frame = "LSoftHand";	
+	end.frame = *shared_data().pst_first_lh_pose; // to test hardcode pose; _grasp_pose is a pointer --> need *
+    }
+    
+    //end.frame = r_end_hand_pose_stamped;
+    
+
+    // define the first segment
+    trajectory_utils::segment s1;
+    s1.type.data = 0;        // min jerk traj
+    s1.T.data = 5.0;         // traj duration 1 second      
+    s1.start = start_traj;   // start pose
+    s1.end = end;            // end pose 
+
+    // only one segment in this example
+    std::vector<trajectory_utils::segment> segments;
+    segments.push_back (s1);
+   
+
+    // prapere the advr_segment_control
+    ADVR_ROS::advr_segment_control srv;
+    srv.request.segment_trj.header.frame_id = shared_data ().world_frame;
+    srv.request.segment_trj.header.stamp = ros::Time::now();
+    srv.request.segment_trj.segments = segments;
+
+    // call the service
+    shared_data()._client.call(srv);
+    
+    // update the last right hand pose to the pregrasp pose
+    if (shared_data().current_hand == shared_data().rh_id)
+    {
+	shared_data().pst_last_rh_pose = shared_data().pst_first_rh_pose;
+	shared_data()._pub_rb_last_rh_pose.publish(*shared_data().pst_last_rh_pose);
+    }
+    else
+    {
+	shared_data().pst_last_lh_pose = shared_data().pst_first_lh_pose;
+	shared_data()._pub_rb_last_lh_pose.publish(*shared_data().pst_last_lh_pose);
+	
+    }
+    
+}
+
+void myfsm::Reset::run (double time, double period)
+{
+    std::cout << shared_data().str_seperator << std::endl;
+    std::cout << "State: RESET RUN" << std::endl;
+    
+    // blocking reading: wait for a command
+    if(shared_data().command.read(shared_data().current_command))
+    {
+	std::string str_cmd = shared_data().current_command.str();
+	std::cout << "Received command: " << str_cmd << std::endl;
+	
+	if (!str_cmd.compare("home"))
+	    transit("Home");
+	
+	if (!str_cmd.compare("ungrasp"))
+	    transit("Ungrasp");
+	
+	if (!str_cmd.compare("grasp"))
+	    transit("Grasp");
+    }
+    
+}
+
+void myfsm::Reset::exit ()
+{
+
+}
+//End EMPTY State
 
 
 // ////////////////////////////

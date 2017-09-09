@@ -115,6 +115,9 @@ namespace myfsm{
 	// last right hand, left hand pose
 	geometry_msgs::PoseStamped::ConstPtr pst_last_rh_pose, pst_last_lh_pose;
 	
+	// first right hand, left hand pose
+	geometry_msgs::PoseStamped::ConstPtr pst_first_rh_pose, pst_first_lh_pose;
+	
 	// ros topic for 3D pose of objects (in camera frame) - for right hand, left hand
 	const std::string vs_rh_obj_pose_3D = "vs_rh_obj_pose_3D";  // MUST BE THE SAME IN: pub_rh_obj_pose_3D = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_obj_pose_3D", 1);
 	const std::string vs_lh_obj_pose_3D = "vs_lh_obj_pose_3D";
@@ -127,8 +130,8 @@ namespace myfsm{
 	const std::string side_grasp = "sidegrasp"; // grasping type: sidegrasp --> move hand parallel to homing pose
 	const std::string top_grasp = "topgrasp";    // grasping type: topgrasp --> grasp from top to bottom
 	
-	//std::string current_hand = rh_id;  // current hand in use - default is right hand
-	std::string current_hand = lh_id;  // current hand in use - default is right hand
+	std::string current_hand = rh_id;  // current hand in use - default is right hand
+	//std::string current_hand = lh_id;  // current hand in use - default is right hand
 	std::string current_grasp_strategy = side_grasp; // current grasp strategy - default is side grasp
 	//std::string current_grasp_strategy = top_grasp; // current grasp strategy - default is topgrasp
 	
@@ -332,6 +335,38 @@ namespace myfsm{
     class Raise : public MacroState
     {
 	virtual std::string get_name() const { return "Raise"; }
+
+	virtual void run(double time, double period);
+
+	virtual void entry(const XBot::FSM::Message& msg);
+
+	virtual void react(const XBot::FSM::Event& e);
+
+	virtual void exit ();
+
+	private:
+        
+     };
+     
+    class Carry : public MacroState // Carry the grasp object to contain object
+    {
+	virtual std::string get_name() const { return "Carry"; }
+
+	virtual void run(double time, double period);
+
+	virtual void entry(const XBot::FSM::Message& msg);
+
+	virtual void react(const XBot::FSM::Event& e);
+
+	virtual void exit ();
+
+	private:
+        
+     };
+     
+    class Reset : public MacroState // Reset hands to original position
+    {
+	virtual std::string get_name() const { return "Reset"; }
 
 	virtual void run(double time, double period);
 
