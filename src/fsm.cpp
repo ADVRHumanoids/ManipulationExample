@@ -230,9 +230,9 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
 	
 	// add a padding to final pose
 	if (shared_data().current_hand == shared_data().rh_id)
-	    geo_posestamped_grasp_pose.pose.position.y -= 0.08; // y from right to left - far a bit to the right
+	    geo_posestamped_grasp_pose.pose.position.y -= 0.05; // y from right to left - far a bit to the right
 	else
-	    geo_posestamped_grasp_pose.pose.position.y += 0.08; // y from right to left - far a bit to the left - for left hand
+	    geo_posestamped_grasp_pose.pose.position.y += 0.05; // y from right to left - far a bit to the left - for left hand
     }
     else
     {	// topgrasp
@@ -346,7 +346,8 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
     geometry_msgs::PoseStamped geo_posestamped_contain_pose;
     geo_posestamped_contain_pose.pose.position = geo_pose_contain_pose.position;
     geo_posestamped_contain_pose.pose.position.x -= 0.1;  // (x from the robot to further) - close to the robot
-    geo_posestamped_contain_pose.pose.position.y -= 0.05;  // (y from right to left) - far to the right // for right hand
+    //geo_posestamped_contain_pose.pose.position.y -= 0.05;  // (y from right to left) - far to the right // for right hand
+    geo_posestamped_contain_pose.pose.position.y += 0.05;  // (y from right to left) - far to the right // for left hand
     geo_posestamped_contain_pose.pose.position.z += 0.25;  // (z is up) ---> SET HIGHER THAN ORIGINAL
    
     geo_posestamped_contain_pose.pose.orientation.x = 0;
