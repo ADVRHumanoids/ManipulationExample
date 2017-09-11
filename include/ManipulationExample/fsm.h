@@ -85,6 +85,8 @@ namespace myfsm{
 	ros::Publisher _pub_rb_last_lh_pose;
 	
 	ros::Publisher _pub_rb_contain_pose;
+	ros::Publisher _pub_rb_pour_pose;
+	ros::Publisher _pub_rb_rotate_pose;
 	
 	ros::Publisher _pub_grasp_plugin_rh; // grasp plugin for right hand
 	ros::Publisher _pub_grasp_plugin_lh; 
@@ -110,7 +112,7 @@ namespace myfsm{
 	const std::string left_camera_frame = "multisense/left_camera_optical_frame";
 	
 	// grasp pose
-	geometry_msgs::PoseStamped::ConstPtr grasp_pose, pregrasp_pose, raise_pose, contain_pose;  // must use ConstPtr, not Ptr
+	geometry_msgs::PoseStamped::ConstPtr grasp_pose, pregrasp_pose, raise_pose, contain_pose, pour_pose, rotate_pose;  // must use ConstPtr, not Ptr
 	
 	// last right hand, left hand pose
 	geometry_msgs::PoseStamped::ConstPtr pst_last_rh_pose, pst_last_lh_pose;
@@ -379,5 +381,36 @@ namespace myfsm{
 	private:
         
      };
+     
+    class Pour : public MacroState // Reset hands to original position
+    {
+	virtual std::string get_name() const { return "Pour"; }
+
+	virtual void run(double time, double period);
+
+	virtual void entry(const XBot::FSM::Message& msg);
+
+	virtual void react(const XBot::FSM::Event& e);
+
+	virtual void exit ();
+
+	private:
+        
+     };
  
+    class Rotate : public MacroState // Rotate back the hand after pouring state
+    {
+	virtual std::string get_name() const { return "Rotate"; }
+
+	virtual void run(double time, double period);
+
+	virtual void entry(const XBot::FSM::Message& msg);
+
+	virtual void react(const XBot::FSM::Event& e);
+
+	virtual void exit ();
+
+	private:
+        
+     };
 }
