@@ -85,9 +85,6 @@ void myfsm::Home::run (double time, double period)
 	if (!str_cmd.compare("reach"))
 	    transit("Reach");
 	
-	if (!str_cmd.compare("idle"))
-	    transit("Idle");
-	
 	if (!str_cmd.compare("detect"))
 	    transit("Detect");
 	
@@ -186,6 +183,7 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
 //     }
     
         //// define the end frame - from vision module
+    
     // wait for vision message
     if (shared_data().current_task_id == shared_data().debris_id)
     {
@@ -504,6 +502,9 @@ void myfsm::Detect::run (double time, double period)
 	
 	if (!str_cmd.compare("home"))
 	    transit("Home");
+	
+	if (!str_cmd.compare("ungrasp"))
+	    transit("Ungrasp");
     }
     
 }
@@ -885,6 +886,14 @@ void myfsm::Reach::run(double time, double period)
 	
 	if (!str_cmd.compare("ungrasp"))
 	    transit("Ungrasp");
+	
+	if (!str_cmd.compare("debris_raise"))
+	    transit("Debris_Raise");
+	
+	if (!str_cmd.compare("valve_turn"))
+	    transit("Valve_Turn");
+	
+	
     }
 }
 
@@ -949,6 +958,15 @@ void myfsm::Grasp::run (double time, double period)
 	
 	if (!str_cmd.compare("reset"))
 	    transit("Reset");
+	
+	if (!str_cmd.compare("debris_raise"))
+	    transit("Debris_Raise");
+	
+	if (!str_cmd.compare("valve_turn"))
+	    transit("Valve_Turn");
+	
+	
+	
     }
     
 }
@@ -1781,6 +1799,10 @@ void myfsm::Debris_Raise::run (double time, double period)
 	
 	if (!str_cmd.compare("home"))
 	    transit("Home");
+	
+	if (!str_cmd.compare("reset"))
+	    transit("Reset");
+	
     }
     
 }
@@ -1878,6 +1900,9 @@ void myfsm::Valve_Turn::run (double time, double period)
 	
 	if (!str_cmd.compare("home"))
 	    transit("Home");
+	
+	if (!str_cmd.compare("reset"))
+	    transit("Reset");
     }
     
 }
