@@ -24,7 +24,8 @@ void myfsm::Home::run (double time, double period)
     std::cout << "State: HOME RUN" << std::endl;
     std::cout << "Current hand: " << shared_data().current_hand << std::endl;
     std::cout << "Current grasp strategy: " << shared_data().current_grasp_strategy << std::endl;
-    std::cout << "You can change hand (rh or lh) or grasp stragegy (topgrasp or sidegrasp)" << std::endl;
+    std::cout << "Current task: " << shared_data().current_task_id << std::endl;
+    std::cout << "You can change hand (rh or lh), grasp stragegy (topgrasp or sidegrasp), or task_id (debris or valve)" << std::endl;
     
 //     // blocking reading: wait for a command
 //     if(shared_data().command.read(shared_data().current_command))
@@ -71,6 +72,13 @@ void myfsm::Home::run (double time, double period)
 	
 	if (!str_cmd.compare(shared_data().side_grasp))
 	    shared_data().current_grasp_strategy = shared_data().side_grasp;
+	
+	if (!str_cmd.compare(shared_data().debris_id))
+	    shared_data().current_task_id = shared_data().debris_id;
+	
+	if (!str_cmd.compare(shared_data().valve_id))
+	    shared_data().current_task_id = shared_data().valve_id;
+	    
 	
 		
 	// transit state ...
@@ -162,20 +170,35 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
     shared_data().pst_first_lh_pose = shared_data().pst_last_lh_pose;
     
     
-    //// define the end frame - from vision module
+//     //// define the end frame - from vision module
+//     // wait for vision message
+//     if (shared_data().current_hand == shared_data().rh_id)
+//     {
+// 	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_rh_obj_pose_3D);
+// 	//shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_rh_obj_pose_3D_FAKE); // got fake pose - to debug
+// 	if (shared_data().verbose_print) std::cout << "GOT MESSAGE for RIGH HAND from vs_rh_grasp_topic_3D" << std::endl;
+//     }
+//     else
+//     {
+// 	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_lh_obj_pose_3D);
+// 	//shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_lh_obj_pose_3D_FAKE); // got fake pose - to debug
+// 	if (shared_data().verbose_print) std::cout << "GOT MESSAGE for LEFT HAND from vs_lh_grasp_topic_3D" << std::endl;
+//     }
+    
+        //// define the end frame - from vision module
     // wait for vision message
-    if (shared_data().current_hand == shared_data().rh_id)
+    if (shared_data().current_task_id == shared_data().debris_id)
     {
-	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_rh_obj_pose_3D);
+	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_debris_obj_pose_3D);
 	//shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_rh_obj_pose_3D_FAKE); // got fake pose - to debug
-	if (shared_data().verbose_print) std::cout << "GOT MESSAGE for RIGH HAND from vs_rh_grasp_topic_3D" << std::endl;
+	
     }
     else
-    {
-	shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_lh_obj_pose_3D);
-	//shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_lh_obj_pose_3D_FAKE); // got fake pose - to debug
-	if (shared_data().verbose_print) std::cout << "GOT MESSAGE for LEFT HAND from vs_lh_grasp_topic_3D" << std::endl;
-    }
+	if (shared_data().current_task_id == shared_data().valve_id)
+	{
+	    shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_valve_obj_pose_3D);
+	    //shared_data ().grasp_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_lh_obj_pose_3D_FAKE); // got fake pose - to debug    
+	}
     
     
     // convert object pose_stamped --> pose --> eigen
@@ -298,115 +321,165 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
 	shared_data()._pub_rb_lh_pregrasp_pose.publish(geo_posestamped_pregrasp_pose);
     
     
-    // find RAISE pose ----------------------------------------------------------
-    geometry_msgs::PoseStamped geo_posestamped_raise_pose;
-    geo_posestamped_raise_pose = *shared_data().grasp_pose; // same location, same orientation
-    geo_posestamped_raise_pose.pose.position.x -= 0.1;  // (x from the robot to further) - close to the robot
-    if (shared_data().current_hand == shared_data().rh_id)
-	geo_posestamped_raise_pose.pose.position.y -= 0.1;  // (y from right to left) - far to the right // for right hand
-    else
-	geo_posestamped_raise_pose.pose.position.y += 0.1;  // (y from right to left) - far to the left // for left hand
-    geo_posestamped_raise_pose.pose.position.z += 0.1;  // (z is up) --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
-    shared_data().raise_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_raise_pose)); // construct the pregrasp pose
-    // publish obj pregrasp_pose message in world frame
-    if (shared_data().current_hand == shared_data().rh_id)
-    {
-	shared_data()._pub_rb_rh_raise_pose.publish(geo_posestamped_raise_pose);
-	if (shared_data().verbose_print)
-	    std::cout << "Publishing rh_raise_pose" << std::endl;
+    if (shared_data().current_task_id == shared_data().debris_id)
+    {   
+	// find DEBRIS RAISE Pose
+	geometry_msgs::PoseStamped geo_posestamped_debris_raise_pose;
+	geo_posestamped_debris_raise_pose = *shared_data().grasp_pose; // same location, same orientation
+	geo_posestamped_debris_raise_pose.pose.position.x -= 0.1;  // (x from the robot to further) - close to the robot
+	if (shared_data().current_hand == shared_data().rh_id)
+	    geo_posestamped_debris_raise_pose.pose.position.y -= 0.2;  // (y from right to left) - far to the right // for right hand
+	else
+	    geo_posestamped_debris_raise_pose.pose.position.y += 0.2;  // (y from right to left) - far to the left // for left hand
+	geo_posestamped_debris_raise_pose.pose.position.z += 0.2;  // (z is up) --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
+	shared_data().debris_raise_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_debris_raise_pose)); // construct the pregrasp pose
+	// publish obj pregrasp_pose message in world frame
+	if (shared_data().current_hand == shared_data().rh_id)
+	{
+	    shared_data()._pub_rb_rh_debris_raise_pose.publish(geo_posestamped_debris_raise_pose);
+	    if (shared_data().verbose_print)
+		std::cout << "Publishing rh_debris_raise_pose" << std::endl;
+	}
+	else
+	    shared_data()._pub_rb_lh_debris_raise_pose.publish(geo_posestamped_debris_raise_pose); 
     }
-    else
-	shared_data()._pub_rb_lh_raise_pose.publish(geo_posestamped_raise_pose); // CHANGE to left hand LATER !!!!!!!
+    
+    if (shared_data().current_task_id == shared_data().valve_id)
+    {   
+	// find VALVE TURN Pose
+	geometry_msgs::PoseStamped geo_posestamped_valve_turn_pose;
+	geo_posestamped_valve_turn_pose = *shared_data().grasp_pose; // same location, same orientation
+	geo_posestamped_valve_turn_pose.pose.position.x -= 0.1;  // (x from the robot to further) - close to the robot
+	if (shared_data().current_hand == shared_data().rh_id)
+	    geo_posestamped_valve_turn_pose.pose.position.y -= 0.2;  // (y from right to left) - far to the right // for right hand
+	else
+	    geo_posestamped_valve_turn_pose.pose.position.y += 0.2;  // (y from right to left) - far to the left // for left hand
+	geo_posestamped_valve_turn_pose.pose.position.z += 0.2;  // (z is up) --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
 	
 	
-    /////////////////////////////////////////////////////////////
-    // get CONTAIN pose
-    shared_data ().contain_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_contain_pose_3D);
-    
-    // convert object pose_stamped --> pose --> eigen
-    tf::Transform tf_cam_to_contain;
-    geometry_msgs::Pose temp_contain;
-    temp_contain.position = shared_data().contain_pose->pose.position;
-    temp_contain.orientation = shared_data().contain_pose->pose.orientation;
-    tf::poseMsgToTF(temp_contain, tf_cam_to_contain);
-    geometry_msgs::Transform geo_trs_cam_to_contain;
-    tf::transformTFToMsg(tf_cam_to_contain, geo_trs_cam_to_contain);
-    Eigen::Affine3d eigen_cam_to_contain;
-    tf::transformMsgToEigen(geo_trs_cam_to_contain, eigen_cam_to_contain);
-    
-    // get final world to object transform
-    Eigen::Affine3d eigen_world_to_contain;
-    eigen_world_to_contain = eigen_world_to_cam * eigen_cam_to_contain;
-    
-    // convert eign to msg pose
-    geometry_msgs::Pose geo_pose_contain_pose;
-    tf::poseEigenToMsg (eigen_world_to_contain, geo_pose_contain_pose);      
-    
-    // keep the position only
-    geometry_msgs::PoseStamped geo_posestamped_contain_pose;
-    geo_posestamped_contain_pose.pose.position = geo_pose_contain_pose.position;
-    geo_posestamped_contain_pose.pose.position.x -= 0.1;  // (x from the robot to further) - close to the robot
-    geo_posestamped_contain_pose.pose.position.y -= 0.05;  // (y from right to left) - far to the right // for right hand
-    //geo_posestamped_contain_pose.pose.position.y += 0.05;  // (y from right to left) - far to the right // for left hand
-    geo_posestamped_contain_pose.pose.position.z += 0.25;  // (z is up) ---> SET HIGHER THAN ORIGINAL
-   
-    geo_posestamped_contain_pose.pose.orientation.x = 0;
-    geo_posestamped_contain_pose.pose.orientation.y = -0.7071;  // rotate 270 along y axis - "sidegrasp" pose
-    geo_posestamped_contain_pose.pose.orientation.z = 0;
-    geo_posestamped_contain_pose.pose.orientation.w = 0.7071; 
-    
-    geo_posestamped_contain_pose.header.frame_id = shared_data().world_frame; // MUST SET
-    // need to cast the variable as the pointer --> reverse later!!!
-    shared_data().contain_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_contain_pose));
-     
-    // publish contain pose message in world frame
-    shared_data()._pub_rb_contain_pose.publish(geo_posestamped_contain_pose);
+	// TODO: CHECK orientation
+	shared_data().valve_turn_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_valve_turn_pose)); // construct the pregrasp pose
+	// publish obj pregrasp_pose message in world frame
+	if (shared_data().current_hand == shared_data().rh_id)
+	{
+	    shared_data()._pub_rb_rh_valve_turn_pose.publish(geo_posestamped_valve_turn_pose);
+	    if (shared_data().verbose_print)
+		std::cout << "Publishing rh_rb_valve_turn_pose" << std::endl;
+	}
+	else
+	    shared_data()._pub_rb_lh_valve_turn_pose.publish(geo_posestamped_valve_turn_pose); 
+    }
     
     
-    
-    /////////////////////////////////////////////////////////////
-    // get POUR pose (from contain pose -- keep position only) 
-    
-    geometry_msgs::PoseStamped geo_posestamped_pour_pose;
-    geo_posestamped_pour_pose.pose.position = geo_pose_contain_pose.position; // keep the position only
-    geo_posestamped_pour_pose.pose.position.x -= 0.1;  // (x from the robot to further) - close to the robot
-    geo_posestamped_pour_pose.pose.position.y -= 0.07;  // (y from right to left) - far to the right // for right hand
-    //geo_posestamped_pour_pose.pose.position.y += 0.05;  // (y from right to left) - far to the left // for left hand
-    geo_posestamped_pour_pose.pose.position.z += 0.25;  // (z is up) ---> SET HIGHER THAN ORIGINAL
-   
-    geo_posestamped_pour_pose.pose.orientation.x = -0.5;
-    geo_posestamped_pour_pose.pose.orientation.y = -0.5;  // "topgrasp" pose - for pouring ...
-    geo_posestamped_pour_pose.pose.orientation.z = 0.5;
-    geo_posestamped_pour_pose.pose.orientation.w = 0.5; 
-    
-    geo_posestamped_pour_pose.header.frame_id = shared_data().world_frame; // MUST SET
-    // need to cast the variable as the pointer --> reverse later!!!
-    shared_data().pour_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_pour_pose));
-     
-    // publish contain pose message in world frame
-    shared_data()._pub_rb_pour_pose.publish(geo_posestamped_pour_pose);
-    
-    
-    /////////////////////////////////////////////////////////////
-    // get ROTATE pose (rotate the hand back after pouring state)
-    geometry_msgs::PoseStamped geo_posestamped_rotate_pose;
-    geo_posestamped_rotate_pose.pose.position = geo_pose_contain_pose.position; // keep the position only
-    geo_posestamped_rotate_pose.pose.position.x -= 0.1;  // (x from the robot to further) - close to the robot
-    geo_posestamped_rotate_pose.pose.position.y -= 0.07;  // (y from right to left) - far to the right // for right hand
-    //geo_posestamped_pour_pose.pose.position.y += 0.05;  // (y from right to left) - far to the left // for left hand
-    geo_posestamped_rotate_pose.pose.position.z += 0.25;  // (z is up) ---> SET HIGHER THAN ORIGINAL
-   
-    geo_posestamped_rotate_pose.pose.orientation.x = 0;
-    geo_posestamped_rotate_pose.pose.orientation.y = -0.7071;  // "topgrasp" pose - for pouring ...
-    geo_posestamped_rotate_pose.pose.orientation.z = 0;
-    geo_posestamped_rotate_pose.pose.orientation.w = 0.7071; 
-    
-    geo_posestamped_rotate_pose.header.frame_id = shared_data().world_frame; // MUST SET
-    // need to cast the variable as the pointer --> reverse later!!!
-    shared_data().rotate_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_rotate_pose));
-     
-    // publish contain pose message in world frame
-    shared_data()._pub_rb_rotate_pose.publish(geo_posestamped_pour_pose);
+//     // find RAISE pose ----------------------------------------------------------
+//     geometry_msgs::PoseStamped geo_posestamped_raise_pose;
+//     geo_posestamped_raise_pose = *shared_data().grasp_pose; // same location, same orientation
+//     geo_posestamped_raise_pose.pose.position.x -= 0.1;  // (x from the robot to further) - close to the robot
+//     if (shared_data().current_hand == shared_data().rh_id)
+// 	geo_posestamped_raise_pose.pose.position.y -= 0.1;  // (y from right to left) - far to the right // for right hand
+//     else
+// 	geo_posestamped_raise_pose.pose.position.y += 0.1;  // (y from right to left) - far to the left // for left hand
+//     geo_posestamped_raise_pose.pose.position.z += 0.1;  // (z is up) --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
+//     shared_data().raise_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_raise_pose)); // construct the pregrasp pose
+//     // publish obj pregrasp_pose message in world frame
+//     if (shared_data().current_hand == shared_data().rh_id)
+//     {
+// 	shared_data()._pub_rb_rh_raise_pose.publish(geo_posestamped_raise_pose);
+// 	if (shared_data().verbose_print)
+// 	    std::cout << "Publishing rh_raise_pose" << std::endl;
+//     }
+//     else
+// 	shared_data()._pub_rb_lh_raise_pose.publish(geo_posestamped_raise_pose); // CHANGE to left hand LATER !!!!!!!
+// 	
+// 	
+//     /////////////////////////////////////////////////////////////
+//     // get CONTAIN pose
+//     shared_data ().contain_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>(shared_data ().vs_contain_pose_3D);
+//     
+//     // convert object pose_stamped --> pose --> eigen
+//     tf::Transform tf_cam_to_contain;
+//     geometry_msgs::Pose temp_contain;
+//     temp_contain.position = shared_data().contain_pose->pose.position;
+//     temp_contain.orientation = shared_data().contain_pose->pose.orientation;
+//     tf::poseMsgToTF(temp_contain, tf_cam_to_contain);
+//     geometry_msgs::Transform geo_trs_cam_to_contain;
+//     tf::transformTFToMsg(tf_cam_to_contain, geo_trs_cam_to_contain);
+//     Eigen::Affine3d eigen_cam_to_contain;
+//     tf::transformMsgToEigen(geo_trs_cam_to_contain, eigen_cam_to_contain);
+//     
+//     // get final world to object transform
+//     Eigen::Affine3d eigen_world_to_contain;
+//     eigen_world_to_contain = eigen_world_to_cam * eigen_cam_to_contain;
+//     
+//     // convert eign to msg pose
+//     geometry_msgs::Pose geo_pose_contain_pose;
+//     tf::poseEigenToMsg (eigen_world_to_contain, geo_pose_contain_pose);      
+//     
+//     // keep the position only
+//     geometry_msgs::PoseStamped geo_posestamped_contain_pose;
+//     geo_posestamped_contain_pose.pose.position = geo_pose_contain_pose.position;
+//     geo_posestamped_contain_pose.pose.position.x -= 0.1;  // (x from the robot to further) - close to the robot
+//     geo_posestamped_contain_pose.pose.position.y -= 0.05;  // (y from right to left) - far to the right // for right hand
+//     //geo_posestamped_contain_pose.pose.position.y += 0.05;  // (y from right to left) - far to the right // for left hand
+//     geo_posestamped_contain_pose.pose.position.z += 0.25;  // (z is up) ---> SET HIGHER THAN ORIGINAL
+//    
+//     geo_posestamped_contain_pose.pose.orientation.x = 0;
+//     geo_posestamped_contain_pose.pose.orientation.y = -0.7071;  // rotate 270 along y axis - "sidegrasp" pose
+//     geo_posestamped_contain_pose.pose.orientation.z = 0;
+//     geo_posestamped_contain_pose.pose.orientation.w = 0.7071; 
+//     
+//     geo_posestamped_contain_pose.header.frame_id = shared_data().world_frame; // MUST SET
+//     // need to cast the variable as the pointer --> reverse later!!!
+//     shared_data().contain_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_contain_pose));
+//      
+//     // publish contain pose message in world frame
+//     shared_data()._pub_rb_contain_pose.publish(geo_posestamped_contain_pose);
+//     
+//     
+//     
+//     /////////////////////////////////////////////////////////////
+//     // get POUR pose (from contain pose -- keep position only) 
+//     
+//     geometry_msgs::PoseStamped geo_posestamped_pour_pose;
+//     geo_posestamped_pour_pose.pose.position = geo_pose_contain_pose.position; // keep the position only
+//     geo_posestamped_pour_pose.pose.position.x -= 0.1;  // (x from the robot to further) - close to the robot
+//     geo_posestamped_pour_pose.pose.position.y -= 0.07;  // (y from right to left) - far to the right // for right hand
+//     //geo_posestamped_pour_pose.pose.position.y += 0.05;  // (y from right to left) - far to the left // for left hand
+//     geo_posestamped_pour_pose.pose.position.z += 0.25;  // (z is up) ---> SET HIGHER THAN ORIGINAL
+//    
+//     geo_posestamped_pour_pose.pose.orientation.x = -0.5;
+//     geo_posestamped_pour_pose.pose.orientation.y = -0.5;  // "topgrasp" pose - for pouring ...
+//     geo_posestamped_pour_pose.pose.orientation.z = 0.5;
+//     geo_posestamped_pour_pose.pose.orientation.w = 0.5; 
+//     
+//     geo_posestamped_pour_pose.header.frame_id = shared_data().world_frame; // MUST SET
+//     // need to cast the variable as the pointer --> reverse later!!!
+//     shared_data().pour_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_pour_pose));
+//      
+//     // publish contain pose message in world frame
+//     shared_data()._pub_rb_pour_pose.publish(geo_posestamped_pour_pose);
+//     
+//     
+//     /////////////////////////////////////////////////////////////
+//     // get ROTATE pose (rotate the hand back after pouring state)
+//     geometry_msgs::PoseStamped geo_posestamped_rotate_pose;
+//     geo_posestamped_rotate_pose.pose.position = geo_pose_contain_pose.position; // keep the position only
+//     geo_posestamped_rotate_pose.pose.position.x -= 0.1;  // (x from the robot to further) - close to the robot
+//     geo_posestamped_rotate_pose.pose.position.y -= 0.07;  // (y from right to left) - far to the right // for right hand
+//     //geo_posestamped_pour_pose.pose.position.y += 0.05;  // (y from right to left) - far to the left // for left hand
+//     geo_posestamped_rotate_pose.pose.position.z += 0.25;  // (z is up) ---> SET HIGHER THAN ORIGINAL
+//    
+//     geo_posestamped_rotate_pose.pose.orientation.x = 0;
+//     geo_posestamped_rotate_pose.pose.orientation.y = -0.7071;  // "topgrasp" pose - for pouring ...
+//     geo_posestamped_rotate_pose.pose.orientation.z = 0;
+//     geo_posestamped_rotate_pose.pose.orientation.w = 0.7071; 
+//     
+//     geo_posestamped_rotate_pose.header.frame_id = shared_data().world_frame; // MUST SET
+//     // need to cast the variable as the pointer --> reverse later!!!
+//     shared_data().rotate_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_rotate_pose));
+//      
+//     // publish contain pose message in world frame
+//     shared_data()._pub_rb_rotate_pose.publish(geo_posestamped_pour_pose);
     
     
     
@@ -1619,6 +1692,202 @@ void myfsm::Rotate::exit ()
 
 }
 // //End EMPTY State
+
+
+
+
+////////////////////////////
+//Begin EMPTY State
+void myfsm::Debris_Raise::react (const XBot::FSM::Event& e)
+{
+    std::cout << "Debris_Raise react" << std::endl;
+}
+
+void myfsm::Debris_Raise::entry (const XBot::FSM::Message& msg)
+{
+    // =====================================================================================
+    // Create the Cartesian trajectories - starting ...
+    trajectory_utils::Cartesian start_traj;
+    if (shared_data().current_hand == shared_data().rh_id)
+    {
+	start_traj.distal_frame = "RSoftHand";
+	start_traj.frame = *shared_data().pst_last_rh_pose;
+    }
+    else
+    {
+	start_traj.distal_frame = "LSoftHand";
+	start_traj.frame = *shared_data().pst_last_lh_pose;
+    }
+    
+    // Create the Cartesian trajectories - ending ...
+    trajectory_utils::Cartesian end;
+    if (shared_data().current_hand == shared_data().rh_id)
+	end.distal_frame = "RSoftHand";	
+    else
+	end.distal_frame = "LSoftHand";	
+    
+    //end.frame = r_end_hand_pose_stamped;
+    end.frame = *shared_data().debris_raise_pose; // to test hardcode pose; _grasp_pose is a pointer --> need *
+
+    // define the first segment
+    trajectory_utils::segment s1;
+    s1.type.data = 0;        // min jerk traj
+    s1.T.data = 5.0;         // traj duration 1 second      
+    s1.start = start_traj;   // start pose
+    s1.end = end;            // end pose 
+
+    // only one segment in this example
+    std::vector<trajectory_utils::segment> segments;
+    segments.push_back (s1);
+   
+
+    // prapere the advr_segment_control
+    ADVR_ROS::advr_segment_control srv;
+    srv.request.segment_trj.header.frame_id = shared_data ().world_frame;
+    srv.request.segment_trj.header.stamp = ros::Time::now();
+    srv.request.segment_trj.segments = segments;
+
+    // call the service
+    shared_data()._client.call(srv);
+    
+    // update the last right hand pose to the pregrasp pose
+    if (shared_data().current_hand == shared_data().rh_id)
+    {
+	shared_data().pst_last_rh_pose = shared_data().debris_raise_pose;
+	shared_data()._pub_rb_last_rh_pose.publish(*shared_data().pst_last_rh_pose);
+    }
+    else
+    {
+	shared_data().pst_last_lh_pose = shared_data().debris_raise_pose;
+	shared_data()._pub_rb_last_lh_pose.publish(*shared_data().pst_last_lh_pose);
+	
+    }
+    
+}
+
+void myfsm::Debris_Raise::run (double time, double period)
+{
+    std::cout << shared_data().str_seperator << std::endl;
+    std::cout << "State: Debris_Raise RUN" << std::endl;
+    
+    // blocking reading: wait for a command
+    if(shared_data().command.read(shared_data().current_command))
+    {
+	std::string str_cmd = shared_data().current_command.str();
+	std::cout << "Received command: " << str_cmd << std::endl;
+	
+	if (!str_cmd.compare("reach"))
+	    transit("Reach");
+	
+	if (!str_cmd.compare("home"))
+	    transit("Home");
+    }
+    
+}
+
+void myfsm::Debris_Raise::exit ()
+{
+
+}
+//End Debris_Raise State
+
+
+////////////////////////////
+//Begin EMPTY State
+void myfsm::Valve_Turn::react (const XBot::FSM::Event& e)
+{
+    std::cout << "Valve_Turn react" << std::endl;
+}
+
+void myfsm::Valve_Turn::entry (const XBot::FSM::Message& msg)
+{
+    // =====================================================================================
+    // Create the Cartesian trajectories - starting ...
+    trajectory_utils::Cartesian start_traj;
+    if (shared_data().current_hand == shared_data().rh_id)
+    {
+	start_traj.distal_frame = "RSoftHand";
+	start_traj.frame = *shared_data().pst_last_rh_pose;
+    }
+    else
+    {
+	start_traj.distal_frame = "LSoftHand";
+	start_traj.frame = *shared_data().pst_last_lh_pose;
+    }
+    
+    // Create the Cartesian trajectories - ending ...
+    trajectory_utils::Cartesian end;
+    if (shared_data().current_hand == shared_data().rh_id)
+	end.distal_frame = "RSoftHand";	
+    else
+	end.distal_frame = "LSoftHand";	
+    
+    //end.frame = r_end_hand_pose_stamped;
+    end.frame = *shared_data().valve_turn_pose; // to test hardcode pose; _grasp_pose is a pointer --> need *
+
+    // define the first segment
+    trajectory_utils::segment s1;
+    s1.type.data = 0;        // min jerk traj
+    s1.T.data = 5.0;         // traj duration 1 second      
+    s1.start = start_traj;   // start pose
+    s1.end = end;            // end pose 
+
+    // only one segment in this example
+    std::vector<trajectory_utils::segment> segments;
+    segments.push_back (s1);
+   
+
+    // prapere the advr_segment_control
+    ADVR_ROS::advr_segment_control srv;
+    srv.request.segment_trj.header.frame_id = shared_data ().world_frame;
+    srv.request.segment_trj.header.stamp = ros::Time::now();
+    srv.request.segment_trj.segments = segments;
+
+    // call the service
+    shared_data()._client.call(srv);
+    
+    // update the last right hand pose to the pregrasp pose
+    if (shared_data().current_hand == shared_data().rh_id)
+    {
+	shared_data().pst_last_rh_pose = shared_data().valve_turn_pose;
+	shared_data()._pub_rb_last_rh_pose.publish(*shared_data().pst_last_rh_pose);
+    }
+    else
+    {
+	shared_data().pst_last_lh_pose = shared_data().valve_turn_pose;
+	shared_data()._pub_rb_last_lh_pose.publish(*shared_data().pst_last_lh_pose);
+	
+    }
+    
+    
+}
+
+void myfsm::Valve_Turn::run (double time, double period)
+{
+    std::cout << shared_data().str_seperator << std::endl;
+    std::cout << "State: Valve_Turn RUN" << std::endl;
+    
+    // blocking reading: wait for a command
+    if(shared_data().command.read(shared_data().current_command))
+    {
+	std::string str_cmd = shared_data().current_command.str();
+	std::cout << "Received command: " << str_cmd << std::endl;
+	
+	if (!str_cmd.compare("reach"))
+	    transit("Reach");
+	
+	if (!str_cmd.compare("home"))
+	    transit("Home");
+    }
+    
+}
+
+void myfsm::Valve_Turn::exit ()
+{
+
+}
+//End EMPTY State
+
 
 
 

@@ -78,16 +78,24 @@ namespace myfsm{
 	ros::Publisher _pub_rb_lh_grasp_pose;
 	ros::Publisher _pub_rb_lh_pregrasp_pose;
 	    
+	ros::Publisher _pub_rb_last_rh_pose;  // last right hand pose - always keep last pose after each action
+	ros::Publisher _pub_rb_last_lh_pose;  
+		
+	// Walk-man review pose
+	ros::Publisher _pub_rb_rh_debris_raise_pose; // debris raise pose after grasping - for right hand
+	ros::Publisher _pub_rb_lh_debris_raise_pose;
+	
+	ros::Publisher _pub_rb_rh_valve_turn_pose;  // valve turn pose after grasping - for right hand
+	ros::Publisher _pub_rb_lh_valve_turn_pose; 
+	
+	// Some poses for pouring, rotating, etc.
 	ros::Publisher _pub_rb_rh_raise_pose;
 	ros::Publisher _pub_rb_lh_raise_pose;
-	
-	ros::Publisher _pub_rb_last_rh_pose;
-	ros::Publisher _pub_rb_last_lh_pose;
-	
 	ros::Publisher _pub_rb_contain_pose;
 	ros::Publisher _pub_rb_pour_pose;
 	ros::Publisher _pub_rb_rotate_pose;
 	
+	// grasp plugin
 	ros::Publisher _pub_grasp_plugin_rh; // grasp plugin for right hand
 	ros::Publisher _pub_grasp_plugin_lh; 
 	ros::ServiceClient _grasp_client;
@@ -112,13 +120,20 @@ namespace myfsm{
 	const std::string left_camera_frame = "multisense/left_camera_optical_frame";
 	
 	// grasp pose
-	geometry_msgs::PoseStamped::ConstPtr grasp_pose, pregrasp_pose, raise_pose, contain_pose, pour_pose, rotate_pose;  // must use ConstPtr, not Ptr
+	geometry_msgs::PoseStamped::ConstPtr grasp_pose, pregrasp_pose, 
+					     debris_raise_pose, valve_turn_pose,	
+					     raise_pose, contain_pose, 
+					     pour_pose, rotate_pose;  // must use ConstPtr, not Ptr
 	
 	// last right hand, left hand pose
 	geometry_msgs::PoseStamped::ConstPtr pst_last_rh_pose, pst_last_lh_pose;
 	
 	// first right hand, left hand pose
 	geometry_msgs::PoseStamped::ConstPtr pst_first_rh_pose, pst_first_lh_pose;
+	
+	// Walk-Man review poses
+	const std::string vs_debris_obj_pose_3D = "vs_debris_obj_pose_3D";  // MUST BE THE SAME IN: pub_rh_obj_pose_3D = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_obj_pose_3D", 1);
+	const std::string vs_valve_obj_pose_3D  = "vs_valve_obj_pose_3D";
 	
 	// ros topic for 3D pose of objects (in camera frame) - for right hand, left hand
 	const std::string vs_rh_obj_pose_3D = "vs_rh_obj_pose_3D";  // MUST BE THE SAME IN: pub_rh_obj_pose_3D = (*_nh).advertise<geometry_msgs::PoseStamped>("vs_rh_obj_pose_3D", 1);
@@ -127,15 +142,17 @@ namespace myfsm{
 	const std::string vs_lh_obj_pose_3D_FAKE = "vs_lh_obj_pose_3D_FAKE";  // fake pose for left hand
 	const std::string vs_contain_pose_3D = "vs_contain_pose_3D";
 	
+	// IDs
+	const std::string debris_id = "debris";
+	const std::string valve_id = "valve";
 	const std::string rh_id = "rh"; // id for choosing right hand
 	const std::string lh_id = "lh";
-	const std::string side_grasp = "sidegrasp"; // grasping type: sidegrasp --> move hand parallel to homing pose
+	const std::string side_grasp = "sidegrasp";  // grasping type: sidegrasp --> move hand parallel to homing pose
 	const std::string top_grasp = "topgrasp";    // grasping type: topgrasp --> grasp from top to bottom
 	
+	std::string current_task_id = debris_id; // task id 
 	std::string current_hand = rh_id;  // current hand in use - default is right hand
-	//std::string current_hand = lh_id;  // current hand in use - default is right hand
 	std::string current_grasp_strategy = side_grasp; // current grasp strategy - default is side grasp
-	//std::string current_grasp_strategy = top_grasp; // current grasp strategy - default is topgrasp
 	
 	// debug 
 	bool verbose_print = true;
@@ -413,4 +430,39 @@ namespace myfsm{
 	private:
         
      };
+     
+    
+    class Debris_Raise : public MacroState // Rotate back the hand after pouring state
+    {
+	virtual std::string get_name() const { return "Debris_Raise"; }
+
+	virtual void run(double time, double period);
+
+	virtual void entry(const XBot::FSM::Message& msg);
+
+	virtual void react(const XBot::FSM::Event& e);
+
+	virtual void exit ();
+
+	private:
+        
+     };
+     
+    
+    class Valve_Turn : public MacroState // Rotate back the hand after pouring state
+    {
+	virtual std::string get_name() const { return "Valve_Turn"; }
+
+	virtual void run(double time, double period);
+
+	virtual void entry(const XBot::FSM::Message& msg);
+
+	virtual void react(const XBot::FSM::Event& e);
+
+	virtual void exit ();
+
+	private:
+        
+     };
+    
 }
