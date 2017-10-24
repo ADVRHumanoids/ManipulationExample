@@ -130,7 +130,7 @@ if __name__ == '__main__':
     	    dep = ic.mult_dep_img
 
         if (rgb != None and dep != None):
-            #print 'rgb shape: ', rgb.shape
+            print 'rgb shape: ', rgb.shape
             
             img = rgb
             img2 = rgb ## keep a copy to refresh
@@ -142,7 +142,7 @@ if __name__ == '__main__':
     
                 cv2.imshow('input', img)
                 k = cv2.waitKey(1)
-                #print 'key value: ', k
+                print 'key value: ', k
         
                 # key bindings
                 if k == 27:         # esc to exit
