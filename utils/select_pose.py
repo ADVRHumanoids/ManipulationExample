@@ -1,13 +1,16 @@
-import numpy as np
 import cv2
 import sys
-from pytz.reference import Central
+import argparse
+import rospy
+from geometry_msgs.msg import PoseStamped
+from ros_image_io import ImageIO
+
 
 BLUE = [255,0,0]        # rectangle color
-RED = [0,0,255]         # PR BG
-GREEN = [0,255,0]       # PR FG
-BLACK = [0,0,0]         # sure BG
-WHITE = [255,255,255]   # sure FG
+RED = [0,0,255]         #
+GREEN = [0,255,0]       # 
+BLACK = [0,0,0]         # 
+WHITE = [255,255,255]   # 
 
 DRAW_BG = {'color' : BLACK, 'val' : 0}
 DRAW_FG = {'color' : WHITE, 'val' : 1}
@@ -19,20 +22,18 @@ rect = (0,0,1,1)
 drawing = False         # flag for drawing curves
 rectangle = False       # flag for drawing rect
 rect_over = False       # flag to check if rect drawn
-rect_or_mask = 100      # flag for selecting rect or mask mode
 value = DRAW_FG         # drawing initialized to FG
 thickness = 3           # brush thickness
 
-center_point = (0,0)
-grasping_point = (0, 0, 0) ## 3D
+center_point = (0,0)       ## center point of the rectangle
+grasping_point = (0, 0, 0) ## 3D point 
 
-import rospy
-from geometry_msgs.msg import PoseStamped
-from ros_image_io import ImageIO
 # start ros node and imageio
 rospy.init_node('AffordanceNet_Node')
 ic = ImageIO()
-pub_obj_pose_3D = rospy.Publisher("vs_obj_pose_ASUS_3D", PoseStamped) # pose of object in camera frame
+
+camera_type = 'asus'
+
 
 
 def onmouse(event,x,y,flags,param):
@@ -62,7 +63,7 @@ def onmouse(event,x,y,flags,param):
         center_point = (c_x, c_y)
         print 'Current point: ', center_point
         cv2.circle(img, center_point, 7, RED, -1)
-        print 'Now press key d if you are happy with this rectangle'
+        print 'Now press key d if you are happy with this rectangle.'
 
 
 def project_to_3D_asus(width_x, height_y, depth, ic):
@@ -73,12 +74,47 @@ def project_to_3D_asus(width_x, height_y, depth, ic):
     
     return p3D
 
+def project_to_3D_multisense(width_x, height_y, depth, ic):
+    X = (width_x - ic.mult_cx) * dval / ic.mult_fx      
+    Y = (height_y - ic.mult_cy) * dval / ic.mult_fy
+    Z = depth
+    p3D = [X, Y, Z]
+    
+    return p3D
+
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Walk-man vision demo')
+    parser.add_argument('--task', dest='task_name', help='Name of the current task (debris or valve). Defaul is debris',
+                        default='debris', type=str)
+    
+    args = parser.parse_args()
+
+    return args
+
+
 if __name__ == '__main__':
 
 #     filename = 'test_img.jpg'
 #     img = cv2.imread(filename)
     
-    process_flag = True
+    args = parse_args()
+    
+    if args.task_name == 'debris':
+        pub_obj_pose_3D = rospy.Publisher("vs_debris_obj_pose_3D", PoseStamped) # pose of object in camera frame
+    elif args.task_name == 'valve':
+        pub_obj_pose_3D = rospy.Publisher("vs_valve_obj_pose_3D", PoseStamped) # pose of object in camera frame
+    else:
+        print 'ERROR: wrong task name!'
+        sys.exit(0)
+    
+
+    process_flag = True 
+    
+    
+
+
     
     print 'Instructions:'
     print 'Draw a rectangle around the area you want to grasp using the right mouse button.\n'
@@ -91,7 +127,6 @@ if __name__ == '__main__':
         
         if (rgb != None and dep != None):
             #print 'rgb shape: ', rgb.shape
-            h, w, c = rgb.shape
             
             img = rgb
             img2 = rgb ## keep a copy to refresh
@@ -101,15 +136,15 @@ if __name__ == '__main__':
                 cv2.setMouseCallback('input',onmouse)
                 cv2.moveWindow('input',img.shape[1]+10,90)
     
-                #cv2.imshow('output',output)
                 cv2.imshow('input', img)
                 k = cv2.waitKey(1)
                 #print 'key value: ', k
         
                 # key bindings
                 if k == 27:         # esc to exit
-                    process_flag = False
+                    process_flag = True ## to get new image
                     break
+                
                 elif k == 100: ## d key ## DO NOT ACTIVE caplock key
                     print 'PROCESSING ..............'
                     print 'Selected rectangle: ', rect
@@ -120,11 +155,16 @@ if __name__ == '__main__':
                     dval = dep[center_point[1], center_point[0]]
                     if dval != 'nan':
                     
-                        p3Dc = project_to_3D_asus(center_point[0], center_point[1], dval, ic)
-                        print '3D point: ', p3Dc
+                        if camera_type == 'asus':
+                            p3Dc = project_to_3D_asus(center_point[0], center_point[1], dval, ic)
+                            print '3D point: ', p3Dc
                         
                         obj_pose_3D = PoseStamped()
-                        obj_pose_3D.header.frame_id = "camera_depth_optical_frame"
+                        #obj_pose_3D.header.frame_id = "camera_depth_optical_frame"
+                        if camera_type == 'asus':
+                            obj_pose_3D.header.frame_id = "camera_depth_optical_frame"
+                        else:
+                            obj_pose_3D.header.frame_id = 'multisense/left_camera_optical_frame'
                        
                         obj_pose_3D.pose.position.x = p3Dc[0]
                         obj_pose_3D.pose.position.y = p3Dc[1]
@@ -134,6 +174,8 @@ if __name__ == '__main__':
                         obj_pose_3D.pose.orientation.z = 0
                         obj_pose_3D.pose.orientation.w = 1 ## no rotation
                         # publish pose
+                        
+                        
                         pub_obj_pose_3D.publish(obj_pose_3D)
                     
                     
