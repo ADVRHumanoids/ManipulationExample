@@ -260,7 +260,7 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
 	//Eigen::Quaterniond q1(0.7071, 0, -0.7071, 0); // w, x, y, z // first rotate to sidegrasp
 	//Eigen::Quaterniond q2(w, x, y, z); // w, x, y, z // rotate 90 around z axis
 	
-	geo_posestamped_grasp_pose.pose.orientation.x = -0.5; // magic number! rotate 2 quaternions to get this
+	geo_posestamped_grasp_pose.pose.orientation.x = -0.5; // magic number!
 	geo_posestamped_grasp_pose.pose.orientation.y = -0.5;  
 	geo_posestamped_grasp_pose.pose.orientation.z = 0.5;
 	geo_posestamped_grasp_pose.pose.orientation.w = 0.5;  
@@ -326,10 +326,10 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
 	geo_posestamped_debris_raise_pose = *shared_data().grasp_pose; // same location, same orientation
 	geo_posestamped_debris_raise_pose.pose.position.x -= 0.1;  // (x from the robot to further) - close to the robot
 	if (shared_data().current_hand == shared_data().rh_id)
-	    geo_posestamped_debris_raise_pose.pose.position.y -= 0.2;  // (y from right to left) - far to the right // for right hand
+	    geo_posestamped_debris_raise_pose.pose.position.y -= 0.1;  // (y from right to left) - far to the right // for right hand
 	else
-	    geo_posestamped_debris_raise_pose.pose.position.y += 0.2;  // (y from right to left) - far to the left // for left hand
-	geo_posestamped_debris_raise_pose.pose.position.z += 0.2;  // (z is up) --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
+	    geo_posestamped_debris_raise_pose.pose.position.y += 0.1;  // (y from right to left) - far to the left // for left hand
+	geo_posestamped_debris_raise_pose.pose.position.z += 0.15;  // (z is up) --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
 	shared_data().debris_raise_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_debris_raise_pose)); // construct the pregrasp pose
 	// publish obj pregrasp_pose message in world frame
 	if (shared_data().current_hand == shared_data().rh_id)
@@ -347,15 +347,19 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
 	// find VALVE TURN Pose
 	geometry_msgs::PoseStamped geo_posestamped_valve_turn_pose;
 	geo_posestamped_valve_turn_pose = *shared_data().grasp_pose; // same location, same orientation
-	geo_posestamped_valve_turn_pose.pose.position.x -= 0.1;  // (x from the robot to further) - close to the robot
+	geo_posestamped_valve_turn_pose.pose.position.x -= 0.0;  // (x from the robot to further) - close to the robot
 	if (shared_data().current_hand == shared_data().rh_id)
-	    geo_posestamped_valve_turn_pose.pose.position.y -= 0.2;  // (y from right to left) - far to the right // for right hand
+	    geo_posestamped_valve_turn_pose.pose.position.y += 0.1;  // (y from right to left) 
 	else
-	    geo_posestamped_valve_turn_pose.pose.position.y += 0.2;  // (y from right to left) - far to the left // for left hand
-	geo_posestamped_valve_turn_pose.pose.position.z += 0.2;  // (z is up) --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
+	    geo_posestamped_valve_turn_pose.pose.position.y -= 0.1;  // (y from right to left) 
+	geo_posestamped_valve_turn_pose.pose.position.z -= 0.1;  // (z is up) --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
 	
+	//TODO: CHECK orientation
+	geo_posestamped_valve_turn_pose.pose.orientation.x = -0.5; // magic number! // similar to topgrasp pose
+	geo_posestamped_valve_turn_pose.pose.orientation.y = -0.5;  
+	geo_posestamped_valve_turn_pose.pose.orientation.z = 0.5;
+	geo_posestamped_valve_turn_pose.pose.orientation.w = 0.5;  
 	
-	// TODO: CHECK orientation
 	shared_data().valve_turn_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(geo_posestamped_valve_turn_pose)); // construct the pregrasp pose
 	// publish obj pregrasp_pose message in world frame
 	if (shared_data().current_hand == shared_data().rh_id)
@@ -1019,6 +1023,12 @@ void myfsm::Ungrasp::run (double time, double period)
 	
 	if (!str_cmd.compare("reset"))
 	    transit("Reset");
+	
+	if (!str_cmd.compare("valve_turn"))
+	    transit("Valve_Turn");
+	
+	if (!str_cmd.compare("debris_raise"))
+	    transit("Debris_Raise");
     }
     
 }
@@ -1903,6 +1913,10 @@ void myfsm::Valve_Turn::run (double time, double period)
 	
 	if (!str_cmd.compare("reset"))
 	    transit("Reset");
+	
+	if (!str_cmd.compare("ungrasp"))
+	    transit("Ungrasp");
+	
     }
     
 }
