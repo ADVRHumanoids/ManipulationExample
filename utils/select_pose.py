@@ -29,7 +29,7 @@ center_point = (0,0)       ## center point of the rectangle
 grasping_point = (0, 0, 0) ## 3D point 
 
 # start ros node and imageio
-rospy.init_node('AffordanceNet_Node')
+rospy.init_node('WalkMan_Vision_Node')
 ic = ImageIO()
 
 #camera_type = 'asus'

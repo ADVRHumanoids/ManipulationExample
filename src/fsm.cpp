@@ -349,10 +349,10 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
 	geo_posestamped_valve_turn_pose = *shared_data().grasp_pose; // same location, same orientation
 	geo_posestamped_valve_turn_pose.pose.position.x -= 0.0;  // (x from the robot to further) - close to the robot
 	if (shared_data().current_hand == shared_data().rh_id)
-	    geo_posestamped_valve_turn_pose.pose.position.y += 0.1;  // (y from right to left) 
+	    geo_posestamped_valve_turn_pose.pose.position.y += 0.2;  // (y from right to left) 
 	else
-	    geo_posestamped_valve_turn_pose.pose.position.y -= 0.1;  // (y from right to left) 
-	geo_posestamped_valve_turn_pose.pose.position.z -= 0.1;  // (z is up) --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
+	    geo_posestamped_valve_turn_pose.pose.position.y -= 0.2;  // (y from right to left) 
+	geo_posestamped_valve_turn_pose.pose.position.z -= 0.2;  // (z is up) --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
 	
 	//TODO: CHECK orientation
 	geo_posestamped_valve_turn_pose.pose.orientation.x = -0.5; // magic number! // similar to topgrasp pose
@@ -1646,7 +1646,7 @@ void myfsm::Rotate::entry (const XBot::FSM::Message& msg)
 	end.distal_frame = "LSoftHand";	
     
     //end.frame = r_end_hand_pose_stamped;
-    end.frame = *shared_data().rotate_pose; // to test hardcode pose; _grasp_pose is a pointer --> need *
+    end.frame = *shared_data().grasp_pose; // CHECK THIS POSE LATER ON THE ROBOT
 
     // define the first segment
     trajectory_utils::segment s1;
@@ -1672,12 +1672,12 @@ void myfsm::Rotate::entry (const XBot::FSM::Message& msg)
     // update the last right hand pose to the pregrasp pose
     if (shared_data().current_hand == shared_data().rh_id)
     {
-	shared_data().pst_last_rh_pose = shared_data().rotate_pose;
+	shared_data().pst_last_rh_pose = shared_data().grasp_pose;
 	shared_data()._pub_rb_last_rh_pose.publish(*shared_data().pst_last_rh_pose);
     }
     else
     {
-	shared_data().pst_last_lh_pose = shared_data().rotate_pose;
+	shared_data().pst_last_lh_pose = shared_data().grasp_pose;
 	shared_data()._pub_rb_last_lh_pose.publish(*shared_data().pst_last_lh_pose);
 	
     }
