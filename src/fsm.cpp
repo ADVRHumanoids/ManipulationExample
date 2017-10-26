@@ -354,7 +354,7 @@ void myfsm::Detect::entry (const XBot::FSM::Message& msg)
 	    geo_posestamped_valve_turn_pose.pose.position.y -= 0.2;  // (y from right to left) 
 	geo_posestamped_valve_turn_pose.pose.position.z -= 0.2;  // (z is up) --- BASE ON THE ORIGINAL world_frame (in middle of two feet)
 	
-	//TODO: CHECK orientation
+	//TODO: CHECK orientation - HAND IS UP - WRONG!!!
 	geo_posestamped_valve_turn_pose.pose.orientation.x = -0.5; // magic number! // similar to topgrasp pose
 	geo_posestamped_valve_turn_pose.pose.orientation.y = -0.5;  
 	geo_posestamped_valve_turn_pose.pose.orientation.z = 0.5;
@@ -1812,6 +1812,9 @@ void myfsm::Debris_Raise::run (double time, double period)
 	
 	if (!str_cmd.compare("reset"))
 	    transit("Reset");
+    
+    if (!str_cmd.compare("ungrasp"))
+        transit("Ungrasp");
 	
     }
     

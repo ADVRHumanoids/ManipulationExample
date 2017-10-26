@@ -77,7 +77,7 @@ class image_converter:
               
             # execute affordances detection
             #frame_result = acnn.execute(cv_image)
-            print 'saving: ', padzero(self.count)
+            print "ok"
             #cv2.imshow("Detection_Input", cv_image)
             cv2.imwrite(rgb_name, cv_image)
         #cv2.imshow("Detection_Aff", frame_result)
