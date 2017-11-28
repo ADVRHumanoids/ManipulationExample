@@ -62,70 +62,70 @@ void ManipulationExample::on_start(double time)
      * operations that are not rt-safe. */
     
     // nh and service segment_control client
-//     _nh = std::make_shared<ros::NodeHandle>();
-//     _client = _nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");
-//     _feedBack = _nh->subscribe("Manipulation_status",1,&ManipulationExample::on_manipulation_status,this);
-//     manipulation_status = false;
-// 
-// 
-//     /* Save the plugin starting time to a class member */
-//     _robot->getMotorPosition(_q0);
-// 
-//     /* Save the robot starting config to a class member */
-//     _start_time = time;
-//     
-//     // sense and sync model
-//     _robot->sense();
-//     
-//     // Get currnt Left hand pose
-//     Eigen::Affine3d pose;
-//     geometry_msgs::Pose start_frame_pose;
-//     _robot->model().getPose("RSoftHand", pose);
-//     
-//     // from eigen to ROS pose
-//     tf::poseEigenToMsg (pose, start_frame_pose);
-// 
-//     // define the PoseStamped start_frame amd end_frame
-//     geometry_msgs::PoseStamped start_frame;
-//     start_frame.pose = start_frame_pose;
-//     
-//     geometry_msgs::PoseStamped end_frame;
-//     end_frame.pose = start_frame_pose;
-//     end_frame.pose.position.x += 0.3;
-//     end_frame.pose.position.z += 0.3;
-//     
-//     trajectory_utils::Cartesian start;
-//     start.distal_frame = "RSoftHand";
-//     start.frame = start_frame;
-//     
-//     trajectory_utils::Cartesian end;
-//     end.distal_frame = "RSoftHand";
-//     end.frame = end_frame;
-//     
-//     // define the first segment
-//     trajectory_utils::segment s1;
-//     s1.type.data = 0;        // min jerk traj
-//     s1.T.data = 5.0;         // traj duration 5 second      
-//     s1.start = start;        // start pose
-//     s1.end = end;            // end pose 
-//     
-//     // only one segment in this example
-//     std::vector<trajectory_utils::segment> segments;
-//     segments.push_back(s1);
-//     
-//     // prapere the advr_segment_control
-//     ADVR_ROS::advr_segment_control srv;
-//     srv.request.segment_trj.header.frame_id = "world";
-//     srv.request.segment_trj.header.stamp = ros::Time::now();
-//     srv.request.segment_trj.segments = segments;
-//     
-//     // call the service
-//     _client.call(srv);
+    _nh = std::make_shared<ros::NodeHandle>();
+    _client = _nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");
+    _feedBack = _nh->subscribe("Manipulation_status",1,&ManipulationExample::on_manipulation_status,this);
+    manipulation_status = false;
+
+
+    /* Save the plugin starting time to a class member */
+    _robot->getMotorPosition(_q0);
+
+    /* Save the robot starting config to a class member */
+    _start_time = time;
+    
+    // sense and sync model
+    _robot->sense();
+    
+    // Get currnt Left hand pose
+    Eigen::Affine3d pose;
+    geometry_msgs::Pose start_frame_pose;
+    _robot->model().getPose("arm2_7", _robot->model().chain("torso").getTipLinkName(), pose);
+    
+    // from eigen to ROS pose
+    tf::poseEigenToMsg (pose, start_frame_pose);
+
+    // define the PoseStamped start_frame amd end_frame
+    geometry_msgs::PoseStamped start_frame;
+    start_frame.pose = start_frame_pose;
+    
+    geometry_msgs::PoseStamped end_frame;
+    end_frame.pose = start_frame_pose;
+    end_frame.pose.position.y += 0.3;
+    end_frame.pose.position.z += 0.3;
+    
+    trajectory_utils::Cartesian start;
+    start.distal_frame = "RSoftHand";
+    start.frame = start_frame;
+    
+    trajectory_utils::Cartesian end;
+    end.distal_frame = "RSoftHand";
+    end.frame = end_frame;
+    
+    // define the first segment
+    trajectory_utils::segment s1;
+    s1.type.data = 0;        // min jerk traj
+    s1.T.data = 5.0;         // traj duration 5 second      
+    s1.start = start;        // start pose
+    s1.end = end;            // end pose 
+    
+    // only one segment in this example
+    std::vector<trajectory_utils::segment> segments;
+    segments.push_back(s1);
+    
+    // prapere the advr_segment_control
+    ADVR_ROS::advr_segment_control srv;
+    srv.request.segment_trj.header.frame_id = "world";
+    srv.request.segment_trj.header.stamp = ros::Time::now();
+    srv.request.segment_trj.segments = segments;
+    
+    // call the service
+    _client.call(srv);
      
-      _nh = std::make_shared<ros::NodeHandle>();
-      _grasp_client = _nh->serviceClient<ADVR_ROS::advr_grasp_control_srv>("grasp_control");
-      _feedBack = _nh->subscribe("Manipulation_status",1,&ManipulationExample::on_manipulation_status,this);
-      manipulation_status = false;
+// //       _nh = std::make_shared<ros::NodeHandle>();
+// //       _grasp_client = _nh->serviceClient<ADVR_ROS::advr_grasp_control_srv>("grasp_control");
+// //       _feedBack = _nh->subscribe("Manipulation_status",1,&ManipulationExample::on_manipulation_status,this);
+// //       manipulation_status = false;
       
      
       
@@ -144,11 +144,11 @@ void ManipulationExample::on_start(double time)
 //         _LHand = l_hand_it->second;
 //     }
       
-      ADVR_ROS::advr_grasp_control_srv srv;
-      srv.request.right_grasp = 0.0;
-      srv.request.left_grasp = 1.0;
-       // call the service
-      _grasp_client.call(srv);
+//       ADVR_ROS::advr_grasp_control_srv srv;
+//       srv.request.right_grasp = 0.0;
+//       srv.request.left_grasp = 1.0;
+//        // call the service
+//       _grasp_client.call(srv);
     
 }
 
