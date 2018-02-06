@@ -63,9 +63,8 @@ namespace XBotPlugin {
 // }
 
 	
-bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
-                                                    XBot::SharedMemory::Ptr shared_memory,
-                                                    XBot::RobotInterface::Ptr robot)
+
+bool ManipulationExample::init_control_plugin(XBot::Handle::Ptr handle)
 {
     /* This function is called outside the real time loop, so we can
      * allocate memory on the heap, print stuff, ...
@@ -95,31 +94,13 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
 
 
     /* Save robot to a private member. */
-    _robot = robot;
+    //_robot = robot;
+    
+
+
     
     // log
     _logger = XBot::MatLogger::getLogger("/tmp/ManipulationExample_log");
-
-    
-//     // HOMING 
-//     _robot->getRobotState("home", _q_home);
-//     _robot->sense();
-//     _robot->getJointPosition(_q0);
-//     _robot->getStiffness(_k0);
-//     _robot->getDamping(_d0);
-//     _k = _k0;
-//     _d = _d0;
-//     _q = _q0;
-//     _qref = _q0;
-// 
-//     std::cout << "_q_home from SRDF : " << _q_home << std::endl;
-//     _time = 0;
-//     _homing_time = 4;
-// 
-//     _robot->print();
-// 
-//     _l_hand_pos = _l_hand_ref = 0.0;
-//     _close_hand = true;
 
     
     // ROS
@@ -148,8 +129,13 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
         
     // FSM robot
     fsm.shared_data()._nh =  std::make_shared<ros::NodeHandle>();
-    fsm.shared_data().command = command;
-    fsm.shared_data().current_command = current_command;
+    //fsm.shared_data().command = command;
+    //fsm.shared_data().current_command = current_command;
+    
+    _robot = handle->getRobotInterface();
+    fsm.shared_data().current_command = std::shared_ptr<XBot::Command>(&current_command);
+    
+    
     fsm.shared_data()._client = _nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");
     
     fsm.shared_data()._pub_rb_rh_grasp_pose = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("rb_rh_grasp_pose", 1);
@@ -179,7 +165,8 @@ bool ManipulationExample::init_control_plugin(std::string path_to_config_file,
     
     
     /*Saves robot as shared variable between states*/
-    fsm.shared_data()._robot= robot;
+    //fsm.shared_data()._robot= robot;
+    fsm.shared_data()._robot= handle->getRobotInterface();
     
     /*Registers states*/
     fsm.register_state(std::make_shared<myfsm::Home>());

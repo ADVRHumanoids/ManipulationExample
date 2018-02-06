@@ -104,8 +104,10 @@ namespace myfsm{
 
 	ros::ServiceClient _client;
 	
-	XBot::SubscriberRT<XBot::Command> command;
-	XBot::Command current_command;
+// 	XBot::SubscriberRT<XBot::Command> command;
+// 	XBot::Command current_command;
+	
+	std::shared_ptr<XBot::Command> current_command;
 
 	Eigen::VectorXd _q0;
       

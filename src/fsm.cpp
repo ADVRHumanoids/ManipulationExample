@@ -53,9 +53,11 @@ void myfsm::Home::run (double time, double period)
 //     }
     
      // blocking reading: wait for a command
-    if(shared_data().command.read(shared_data().current_command))
+    //if(shared_data().command.read(shared_data().current_command))
+    
+    if(!shared_data().current_command->str().empty())
     {
-	std::string str_cmd = shared_data().current_command.str();
+	std::string str_cmd = shared_data().current_command->str();
 	std::cout << "Received command: " << str_cmd << std::endl;
 	
 	// update active hand to right hand
@@ -493,9 +495,10 @@ void myfsm::Detect::run (double time, double period)
     std::cout << "State: DETECT RUN" << std::endl;
     
     // blocking reading: wait for a command
-    if(shared_data().command.read(shared_data().current_command))
+    //if(shared_data().command.read(shared_data().current_command))
+    if(!shared_data().current_command->str().empty())
     {
-	std::string str_cmd = shared_data().current_command.str();
+	std::string str_cmd = shared_data().current_command->str();
 	std::cout << "Received command: " << str_cmd << std::endl;
 	
 	if (!str_cmd.compare("prereach"))
@@ -596,9 +599,10 @@ void myfsm::Prereach::run (double time, double period)
     std::cout << "State: PREREACH RUN" << std::endl;
     
     // blocking reading: wait for a command
-    if(shared_data().command.read(shared_data().current_command))
+    //if(shared_data().command.read(shared_data().current_command))
+    if(!shared_data().current_command->str().empty())
     {
-	std::string str_cmd = shared_data().current_command.str();
+	std::string str_cmd = shared_data().current_command->str();
 	std::cout << "Received command: " << str_cmd << std::endl;
 	
 	if (!str_cmd.compare("reach"))
@@ -873,9 +877,10 @@ void myfsm::Reach::run(double time, double period)
     std::cout << "State: REACH RUN" << std::endl;
 
  // blocking reading: wait for a command
-    if(shared_data().command.read(shared_data().current_command))
+    //if(shared_data().command.read(shared_data().current_command))
+    if(!shared_data().current_command->str().empty())
     {
-	std::string str_cmd = shared_data().current_command.str();
+	std::string str_cmd = shared_data().current_command->str();
 	std::cout << "Received command: " << str_cmd << std::endl;
 	
 	if (!str_cmd.compare("home"))
@@ -946,9 +951,10 @@ void myfsm::Grasp::run (double time, double period)
     std::cout << "State: GRASP RUN" << std::endl;
     
     // blocking reading: wait for a command
-    if(shared_data().command.read(shared_data().current_command))
+    //if(shared_data().command.read(shared_data().current_command))
+    if(!shared_data().current_command->str().empty())
     {
-	std::string str_cmd = shared_data().current_command.str();
+	std::string str_cmd = shared_data().current_command->str();
 	std::cout << "Received command: " << str_cmd << std::endl;
 	
 	if (!str_cmd.compare("ungrasp"))
@@ -1010,9 +1016,10 @@ void myfsm::Ungrasp::run (double time, double period)
     std::cout << "State: UNGRASP RUN" << std::endl;
     
     // blocking reading: wait for a command
-    if(shared_data().command.read(shared_data().current_command))
+    //if(shared_data().command.read(shared_data().current_command))
+    if(!shared_data().current_command->str().empty())
     {
-	std::string str_cmd = shared_data().current_command.str();
+	std::string str_cmd = shared_data().current_command->str();
 	std::cout << "Received command: " << str_cmd << std::endl;
 	
 	if (!str_cmd.compare("grasp"))
@@ -1146,9 +1153,10 @@ void myfsm::Raise::run (double time, double period)
     std::cout << "State: RAISE RUN" << std::endl;
     
     // blocking reading: wait for a command
-    if(shared_data().command.read(shared_data().current_command))
+    //if(shared_data().command.read(shared_data().current_command))
+    if(!shared_data().current_command->str().empty())
     {
-	std::string str_cmd = shared_data().current_command.str();
+	std::string str_cmd = shared_data().current_command->str();
 	std::cout << "Received command: " << str_cmd << std::endl;
 	
 	if (!str_cmd.compare("ungrasp"))
@@ -1260,9 +1268,10 @@ void myfsm::Move::run (double time, double period)
     std::cout << "State: MOVE RUN" << std::endl;
     
     // blocking reading: wait for a command
-    if(shared_data().command.read(shared_data().current_command))
+    //if(shared_data().command.read(shared_data().current_command))
+    if(!shared_data().current_command->str().empty())
     {
-	std::string str_cmd = shared_data().current_command.str();
+	std::string str_cmd = shared_data().current_command->str();
 	std::cout << "Received command: " << str_cmd << std::endl;
 	
 	if (!str_cmd.compare("grasp"))
@@ -1367,9 +1376,10 @@ void myfsm::Carry::run (double time, double period)
     std::cout << "State: CARRY RUN" << std::endl;
     
     // blocking reading: wait for a command
-    if(shared_data().command.read(shared_data().current_command))
+    //if(shared_data().command.read(shared_data().current_command))
+    if(!shared_data().current_command->str().empty())
     {
-	std::string str_cmd = shared_data().current_command.str();
+	std::string str_cmd = shared_data().current_command->str();
 	std::cout << "Received command: " << str_cmd << std::endl;
 		
 	if (!str_cmd.compare("home"))
@@ -1479,9 +1489,10 @@ void myfsm::Reset::run (double time, double period)
     std::cout << "State: RESET RUN" << std::endl;
     
     // blocking reading: wait for a command
-    if(shared_data().command.read(shared_data().current_command))
+    //if(shared_data().command.read(shared_data().current_command))
+    if(!shared_data().current_command->str().empty())
     {
-	std::string str_cmd = shared_data().current_command.str();
+	std::string str_cmd = shared_data().current_command->str();
 	std::cout << "Received command: " << str_cmd << std::endl;
 	
 	if (!str_cmd.compare("home"))
@@ -1579,9 +1590,10 @@ void myfsm::Pour::run (double time, double period)
     std::cout << "State: POUR RUN" << std::endl;
     
     // blocking reading: wait for a command
-    if(shared_data().command.read(shared_data().current_command))
+    //if(shared_data().command.read(shared_data().current_command))
+    if(!shared_data().current_command->str().empty())
     {
-	std::string str_cmd = shared_data().current_command.str();
+	std::string str_cmd = shared_data().current_command->str();
 	std::cout << "Received command: " << str_cmd << std::endl;
 	
 	if (!str_cmd.compare("home"))
@@ -1692,9 +1704,10 @@ void myfsm::Rotate::run (double time, double period)
     std::cout << "State: ROTATE RUN" << std::endl;
     
     // blocking reading: wait for a command
-    if(shared_data().command.read(shared_data().current_command))
+    //if(shared_data().command.read(shared_data().current_command))
+    if(!shared_data().current_command->str().empty())
     {
-	std::string str_cmd = shared_data().current_command.str();
+	std::string str_cmd = shared_data().current_command->str();
 	std::cout << "Received command: " << str_cmd << std::endl;
 	
 	if (!str_cmd.compare("reach"))
@@ -1799,9 +1812,10 @@ void myfsm::Debris_Raise::run (double time, double period)
     std::cout << "State: Debris_Raise RUN" << std::endl;
     
     // blocking reading: wait for a command
-    if(shared_data().command.read(shared_data().current_command))
+    //if(shared_data().command.read(shared_data().current_command))
+    if(!shared_data().current_command->str().empty())
     {
-	std::string str_cmd = shared_data().current_command.str();
+	std::string str_cmd = shared_data().current_command->str();
 	std::cout << "Received command: " << str_cmd << std::endl;
 	
 	if (!str_cmd.compare("reach"))
@@ -1903,9 +1917,10 @@ void myfsm::Valve_Turn::run (double time, double period)
     std::cout << "State: Valve_Turn RUN" << std::endl;
     
     // blocking reading: wait for a command
-    if(shared_data().command.read(shared_data().current_command))
+    //if(shared_data().command.read(shared_data().current_command))
+    if(!shared_data().current_command->str().empty())
     {
-	std::string str_cmd = shared_data().current_command.str();
+	std::string str_cmd = shared_data().current_command->str();
 	std::cout << "Received command: " << str_cmd << std::endl;
 	
 	if (!str_cmd.compare("reach"))

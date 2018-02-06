@@ -63,9 +63,11 @@ namespace XBotPlugin
 
     public:
 
-	virtual bool init_control_plugin(std::string path_to_config_file,
-					XBot::SharedMemory::Ptr shared_memory,
-					XBot::RobotInterface::Ptr robot);
+// 	virtual bool init_control_plugin(std::string path_to_config_file,
+// 					XBot::SharedMemory::Ptr shared_memory,
+// 					XBot::RobotInterface::Ptr robot);
+	
+	virtual bool init_control_plugin(XBot::Handle::Ptr handle);
 	virtual bool close();
 	virtual void on_start(double time);
 	virtual void on_stop(double time);
